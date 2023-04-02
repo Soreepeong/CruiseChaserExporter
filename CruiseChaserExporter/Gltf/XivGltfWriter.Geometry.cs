@@ -7,8 +7,9 @@ using Lumina.Models.Models;
 namespace CruiseChaserExporter.Gltf;
 
 public partial class XivGltfWriter {
-    private bool WriteSkinOrLogError(out GltfSkin newSkin,
-        List<int> boneIndexToNodeIndex,
+    private bool WriteSkinOrLogError(
+        out GltfSkin newSkin,
+        out List<int> boneIndexToNodeIndex,
         GltfNode rootNode,
         HkRootLevelContainer sklbRoot) {
         newSkin = null!;
@@ -38,7 +39,6 @@ public partial class XivGltfWriter {
             if (bone.Name is null)
                 return Log.E<bool>("{0}/#{1}: Bone name is null.", rootNode.Name, i);
 
-            // TODO: verify
             var translation = new Vector3(refPose[0], refPose[1], refPose[2] /*, refPose[3] = 0 */);
             var rotation = new Quaternion(refPose[4], refPose[5], refPose[6], refPose[7]);
             var scale = new Vector3(refPose[8], refPose[9], refPose[10] /*, refPose[11] = 0 */);
@@ -47,6 +47,9 @@ public partial class XivGltfWriter {
                 Matrix4x4.CreateScale(scale)
                 * Matrix4x4.CreateFromQuaternion(rotation)
                 * Matrix4x4.CreateTranslation(translation);
+
+            if (parentIndex != -1)
+                bindPoseMatrices[i] *= bindPoseMatrices[parentIndex];
 
             if (!Matrix4x4.Invert(bindPoseMatrices[i], out inverseBindPoseMatrices[i]))
                 return Log.E<bool>("{0}/{1}: Failed to invert BindPoseMatrix.", rootNode.Name, bone.Name);
@@ -92,11 +95,9 @@ public partial class XivGltfWriter {
         ushort[] indexBufferArray,
         int indexBufferView,
         int materialIndex) {
-        string baseName;
-
         GltfMeshPrimitiveAttributes accessors = new();
 
-        baseName = $"{rootNodeName}/vertex";
+        var baseName = $"{rootNodeName}/vertex";
         accessors.Position =
             GetAccessorOrDefault(baseName, 0, xivMesh.Vertices.Length)
             ?? AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
@@ -142,10 +143,10 @@ public partial class XivGltfWriter {
                 GetAccessorOrDefault(baseName, 0, xivMesh.Vertices.Length)
                 ?? AddAccessor(baseName, -1, GltfBufferViewTarget.ArrayBuffer,
                     xivMesh.Vertices.Select(x => new TypedVec4<ushort>(
-                        xivMesh.BoneTable[x.BlendIndices[0]],
-                        xivMesh.BoneTable[x.BlendIndices[1]],
-                        xivMesh.BoneTable[x.BlendIndices[2]],
-                        xivMesh.BoneTable[x.BlendIndices[3]])).ToArray());
+                        x.BlendWeights!.Value.X == 0 ? (ushort) 0 : xivMesh.BoneTable[x.BlendIndices[0]],
+                        x.BlendWeights!.Value.Y == 0 ? (ushort) 0 : xivMesh.BoneTable[x.BlendIndices[1]],
+                        x.BlendWeights!.Value.Z == 0 ? (ushort) 0 : xivMesh.BoneTable[x.BlendIndices[2]],
+                        x.BlendWeights!.Value.W == 0 ? (ushort) 0 : xivMesh.BoneTable[x.BlendIndices[3]])).ToArray());
         }
 
         newPrimitives = xivMesh.Submeshes
@@ -163,12 +164,13 @@ public partial class XivGltfWriter {
         return newPrimitives.Any();
     }
 
-    protected bool CreateModelNode(out GltfNode node, Model xivModel, HkRootLevelContainer? hkSkeletonRoot,
+    protected bool CreateModelNode(
+        out GltfNode node,
+        Model xivModel,
+        HkRootLevelContainer? hkSkeletonRoot,
         bool omitSkins = false) {
         var rootNodeName = Path.GetFileNameWithoutExtension(xivModel.File!.FilePath.Path);
         var childPrimitives = new List<GltfMeshPrimitive>();
-
-        List<int> boneIndexToNodeIndex = new();
 
         var indexBufferOffset = (int) xivModel.File.FileHeader.IndexOffset[(int) xivModel.Lod];
         var indexBufferSize = (int) xivModel.File.FileHeader.IndexBufferSize[(int) xivModel.Lod];
@@ -204,7 +206,9 @@ public partial class XivGltfWriter {
             node = null!;
             return false;
         }
-        Log.D("Model[{0}]: {1} primitive{2}.", rootNodeName, childPrimitives.Count, childPrimitives.Count < 2? "" : "s");
+
+        Log.D("Model[{0}]: {1} primitive{2}.", rootNodeName, childPrimitives.Count,
+            childPrimitives.Count < 2 ? "" : "s");
 
         node = new() {
             Name = rootNodeName,
@@ -216,12 +220,12 @@ public partial class XivGltfWriter {
 
         if (omitSkins)
             Log.D("{0}: Skipping skins.", rootNodeName);
-        else if (hkSkeletonRoot != null) {
-            if (WriteSkinOrLogError(out var newSkin, boneIndexToNodeIndex, node, hkSkeletonRoot))
-                node.Skin = AddSkin(newSkin);
-        }
-        else
+        else if (hkSkeletonRoot == null)
             Log.D("{0}: No skinning info is available.", rootNodeName);
+        else if (WriteSkinOrLogError(out var newSkin, out var boneIndexToNodeIndex, node, hkSkeletonRoot)) {
+            node.Skin = AddSkin(newSkin);
+            // TODO: add animations from here?
+        }
 
         return true;
     }

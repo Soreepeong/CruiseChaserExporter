@@ -26,5 +26,5 @@ public partial class XivGltfWriter {
         
     protected static Quaternion SwapAxesForAnimations(Quaternion val) => val;
     protected static Quaternion SwapAxesForLayout(Quaternion val) => val;
-    protected static Matrix4x4 NormalizeTransformationMatrix(Matrix4x4 val) => Matrix4x4.Transpose(val);
+    protected static Matrix4x4 NormalizeTransformationMatrix(Matrix4x4 val) => val;
 }
