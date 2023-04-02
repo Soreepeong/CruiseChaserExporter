@@ -1,13 +1,14 @@
-# TODO some app name
-TODO some description
+# Cruise Chaser Exporter
+Exports cruise chaser. As GLB.
 
-## TODO write ref
+## Code partially yoinked from
 * [ackwell/mayhem](https://github.com/ackwell/mayhem)
   * Translated havok tagfile reader into C#. 
 * [Markemp/Cryengine-Converter](https://github.com/Markemp/Cryengine-Converter) (GPL)
   * GLTF structure definitions and TaggedLogger (I wrote these)
 * [OpenAWE](https://github.com/OpenAWE-Project/OpenAWE) (GPL)
-  * Animation decompression 
+  * Animation decompression
+
 ## Useful stuff
 * [GLTF Validator](https://github.khronos.org/glTF-Validator/)
 * [donmccurdy/GLTF Viewer](https://gltf-viewer.donmccurdy.com/)
