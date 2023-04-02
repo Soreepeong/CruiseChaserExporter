@@ -60,7 +60,11 @@ public static class BinaryReaderExtensions {
         var y = (int)((n >> 12) & 0xFFF);
         var z = (int)((n >> 24) & 0xFFF);
         var shift = (int)((n >> 36) & 0x3);
-        var invert = 0 != ((n >> 39) & 0x1);
+        var invert = 0 != ((n >> 38) & 0x1);
+        var invalid = 0 != ((n >> 39) & 0x1);
+
+        if (invalid)
+            throw new InvalidDataException();
 
         var tmp = new[] {
             (x - delta) * fractal,
@@ -70,11 +74,9 @@ public static class BinaryReaderExtensions {
         };
         tmp[3] = MathF.Sqrt(1f - tmp[0] * tmp[0] - tmp[1] * tmp[1] - tmp[2] * tmp[2]) * (invert ? -1 : 1);
 
-        return shift switch {
-            0 => new(tmp[2], tmp[1], tmp[0], tmp[3]),
-            1 => new(tmp[2], tmp[1], tmp[3], tmp[0]),
-            2 => new(tmp[2], tmp[3], tmp[1], tmp[0]),
-            _ => new(tmp[0], tmp[1], tmp[2], tmp[3])
-        };
+        for (var i = 0; i < 3 - shift; ++i)
+            (tmp[3 - i], tmp[2 - i]) = (tmp[2 - i], tmp[3 - i]);
+        
+        return new(tmp[0], tmp[1], tmp[2], tmp[3]);
     }
 }

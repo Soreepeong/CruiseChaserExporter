@@ -86,7 +86,7 @@ public partial class XivGltfWriter {
                             break;
                     }
 
-                    if (rotates is not null && times is not null && false) {
+                    if (rotates is not null && times is not null) {
                         newAnimation.Samplers.Add(new() {
                             Input = AddAccessor(
                                 $"animation/{animName}/{animIndex}/{animSubIndex}/rotate/time", -1, null, times),
