@@ -12,7 +12,9 @@ public partial class XivGltfWriter {
      * ...and apparently it's the same with internal XIV format.
      */
 
-    protected static Vector3 NormalizeNormal(Vector3 val) => Vector3.Zero == val ? Vector3.One : Vector3.Normalize(val);
+    protected static Vector3 NormalizeNormal(Vector3 val) =>
+        Vector3.Zero == val ? Vector3.UnitX : Vector3.Normalize(val);
+
     protected static Vector3 NormalizePosition(Vector4 val) => new(val.X, val.Y, val.Z);
     protected static Vector2 NormalizeUv(Vector4 val) => new(val.X, val.Y);
     protected static Vector3 SwapAxesForScale(Vector3 val) => val;
@@ -26,5 +28,5 @@ public partial class XivGltfWriter {
         
     protected static Quaternion SwapAxesForAnimations(Quaternion val) => val;
     protected static Quaternion SwapAxesForLayout(Quaternion val) => val;
-    protected static Matrix4x4 NormalizeTransformationMatrix(Matrix4x4 val) => val;
+    protected static Matrix4x4 NormalizeTransformationMatrix(Matrix4x4 val) => Matrix4x4.Multiply(val, 1f / val.M44);
 }
