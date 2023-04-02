@@ -21,17 +21,17 @@ public partial class XivGltfWriter {
         if (sklbRoot.NamedVariants[0].Variant is not HkaAnimationContainer container)
             return Log.W<bool>("Contained element is not a hkaAnimationContainer");
 
-        if (container.Skeletons.Count != 1)
-            return Log.W<bool>("Skeleton count = {0} != 1", container.Skeletons.Count);
+        if (container.Skeletons.Length != 1)
+            return Log.W<bool>("Skeleton count = {0} != 1", container.Skeletons.Length);
 
         var bones = container.Skeletons[0].Bones;
         var parentIndices = container.Skeletons[0].ParentIndices;
         var referencePoses = container.Skeletons[0].ReferencePose;
 
-        var bindPoseMatrices = new Matrix4x4[parentIndices.Count];
-        var inverseBindPoseMatrices = new Matrix4x4[parentIndices.Count];
+        var bindPoseMatrices = new Matrix4x4[parentIndices.Length];
+        var inverseBindPoseMatrices = new Matrix4x4[parentIndices.Length];
 
-        for (var i = 0; i < bones.Count; i++) {
+        for (var i = 0; i < bones.Length; i++) {
             var bone = bones[i];
             var refPose = referencePoses[i];
             var parentIndex = parentIndices[i];
@@ -75,7 +75,7 @@ public partial class XivGltfWriter {
 
         var baseName = $"{rootNode.Name}/inverseBindMatrix";
         var inverseBindMatricesAccessor =
-            GetAccessorOrDefault(baseName, 0, bones.Count)
+            GetAccessorOrDefault(baseName, 0, bones.Length)
             ?? AddAccessor(baseName, -1, null, inverseBindPoseMatrices
                 .Select(NormalizeTransformationMatrix)
                 .ToArray());
@@ -168,6 +168,7 @@ public partial class XivGltfWriter {
         out GltfNode node,
         Model xivModel,
         HkRootLevelContainer? hkSkeletonRoot,
+        Dictionary<string, HkRootLevelContainer> hkAnimationRoots,
         bool omitSkins = false) {
         var rootNodeName = Path.GetFileNameWithoutExtension(xivModel.File!.FilePath.Path);
         var childPrimitives = new List<GltfMeshPrimitive>();
@@ -227,7 +228,12 @@ public partial class XivGltfWriter {
             Log.D("{0}: No skinning info is available.", rootNodeName);
         else if (WriteSkinOrLogError(out var newSkin, out var boneIndexToNodeIndex, node, hkSkeletonRoot)) {
             node.Skin = AddSkin(newSkin);
-            // TODO: add animations from here?
+
+            var roots = hkAnimationRoots.Values.ToList();
+            var names = GltfRendererUtilities.StripCommonParentPaths(
+                hkAnimationRoots.Keys.Select(x => Path.ChangeExtension(x, null)).ToList());
+            foreach (var (animName, animRoot) in names.Zip(roots))
+                WriteAnimations(animName, animRoot, boneIndexToNodeIndex);
         }
 
         return true;

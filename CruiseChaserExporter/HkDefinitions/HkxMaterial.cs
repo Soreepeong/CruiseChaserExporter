@@ -2,12 +2,12 @@
 
 public class HkxMaterial : HkxAttributeHolder {
     public string? Name;
-    public List<HkxMaterialTextureStage> Stages;
+    public HkxMaterialTextureStage[] Stages;
     public float[] DiffuseColor;
     public float[] AmbientColor;
     public float[] SpecularColor;
     public float[] EmissiveColor;
-    public List<HkxMaterial> SubMaterials;
+    public HkxMaterial[] SubMaterials;
     public HkReferencedObject? ExtraData;
-    public List<HkxMaterialProperty> Properties;
+    public HkxMaterialProperty[] Properties;
 }

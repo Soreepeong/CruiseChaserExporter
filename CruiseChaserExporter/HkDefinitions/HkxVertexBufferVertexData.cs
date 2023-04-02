@@ -1,11 +1,11 @@
 ﻿namespace CruiseChaserExporter.HkDefinitions;
 
 public class HkxVertexBufferVertexData {
-    public List<float[]> VectorData;
-    public List<float> FloatData;
-    public List<int> Uint32Data;
-    public List<int> Uint16Data;
-    public List<byte> Uint8Data;
+    public float[][] VectorData;
+    public float[] FloatData;
+    public int[] Uint32Data;
+    public int[] Uint16Data;
+    public byte[] Uint8Data;
     public int? NumVerts;
     public int? VectorStride;
     public int? FloatStride;

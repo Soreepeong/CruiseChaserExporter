@@ -1,4 +1,3 @@
 ﻿namespace CruiseChaserExporter.HkDefinitions;
 
-public class HkBaseObject {
-}
+public class HkBaseObject { }

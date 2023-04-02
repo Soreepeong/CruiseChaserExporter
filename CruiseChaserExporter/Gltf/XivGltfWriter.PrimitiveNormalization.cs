@@ -17,7 +17,6 @@ public partial class XivGltfWriter {
 
     protected static Vector3 NormalizePosition(Vector4 val) => new(val.X, val.Y, val.Z);
     protected static Vector2 NormalizeUv(Vector4 val) => new(val.X, val.Y);
-    protected static Vector3 SwapAxesForScale(Vector3 val) => val;
 
     protected static Vector4 NormalizeTangent(Vector4 val) {
         var normXyz = Vector3.Normalize(new(val.X, val.Y, val.Z));
@@ -25,8 +24,6 @@ public partial class XivGltfWriter {
         var w = val.W == 0 ? -1 : val.W;
         return new(normXyz.X, normXyz.Y, normXyz.Z, w);
     }
-        
-    protected static Quaternion SwapAxesForAnimations(Quaternion val) => val;
-    protected static Quaternion SwapAxesForLayout(Quaternion val) => val;
+
     protected static Matrix4x4 NormalizeTransformationMatrix(Matrix4x4 val) => Matrix4x4.Multiply(val, 1f / val.M44);
 }

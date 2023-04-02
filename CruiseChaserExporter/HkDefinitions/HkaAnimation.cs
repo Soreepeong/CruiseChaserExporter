@@ -6,5 +6,5 @@ public class HkaAnimation : HkReferencedObject {
     public int? NumberOfTransformTracks;
     public int? NumberOfFloatTracks;
     public HkaAnimatedReferenceFrame? ExtractedMotion;
-    public List<HkaAnnotationTrack> AnnotationTracks;
+    public HkaAnnotationTrack[] AnnotationTracks;
 }

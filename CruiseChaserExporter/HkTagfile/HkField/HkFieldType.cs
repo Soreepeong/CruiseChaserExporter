@@ -61,7 +61,6 @@ public class HkFieldType {
                         throw new ArgumentOutOfRangeException();
                 }
             case HkFieldArrayType.VariableLength:
-                return $"List<{InnerType!.GenerateCSharpTypeCode(nameTransformer)}>";
             case HkFieldArrayType.FixedLength:
                 return $"{InnerType!.GenerateCSharpTypeCode(nameTransformer)}[]";
             default:

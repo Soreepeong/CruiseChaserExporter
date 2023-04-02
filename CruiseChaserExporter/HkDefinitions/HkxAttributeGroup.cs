@@ -2,5 +2,5 @@
 
 public class HkxAttributeGroup {
     public string? Name;
-    public List<HkxAttribute> Attributes;
+    public HkxAttribute[] Attributes;
 }

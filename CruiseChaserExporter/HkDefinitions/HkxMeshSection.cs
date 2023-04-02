@@ -2,7 +2,7 @@
 
 public class HkxMeshSection : HkReferencedObject {
     public HkxVertexBuffer? VertexBuffer;
-    public List<HkxIndexBuffer> IndexBuffers;
+    public HkxIndexBuffer[] IndexBuffers;
     public HkxMaterial? Material;
-    public List<HkReferencedObject> UserChannels;
+    public HkReferencedObject[] UserChannels;
 }

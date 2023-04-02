@@ -1,4 +1,3 @@
 ﻿namespace CruiseChaserExporter.HkDefinitions;
 
-public class HkLocalFrame : HkReferencedObject {
-}
+public class HkLocalFrame : HkReferencedObject { }

@@ -5,6 +5,6 @@ public class HkaMeshBinding : HkReferencedObject {
     public string? OriginalSkeletonName;
     public string? Name;
     public HkaSkeleton? Skeleton;
-    public List<HkaMeshBindingMapping> Mappings;
-    public List<float[]> BoneFromSkinMeshTransforms;
+    public HkaMeshBindingMapping[] Mappings;
+    public float[][] BoneFromSkinMeshTransforms;
 }

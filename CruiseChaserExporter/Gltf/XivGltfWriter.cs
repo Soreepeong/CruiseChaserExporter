@@ -38,8 +38,12 @@ public partial class XivGltfWriter
         });
     }
 
-    public bool AddModel(Model xivModel, HkRootLevelContainer hkSkeletonRoot, bool omitSkins = false) {
-        if (!CreateModelNode(out var node, xivModel, hkSkeletonRoot, omitSkins))
+    public bool AddModel(
+        Model xivModel,
+        HkRootLevelContainer hkSkeletonRoot,
+        Dictionary<string, HkRootLevelContainer> hkAnimationRoots,
+        bool omitSkins = false) {
+        if (!CreateModelNode(out var node, xivModel, hkSkeletonRoot, hkAnimationRoots, omitSkins))
             return false;
         
         CurrentScene.Nodes.Add(AddNode(node));

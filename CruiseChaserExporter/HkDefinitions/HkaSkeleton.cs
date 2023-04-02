@@ -2,10 +2,10 @@
 
 public class HkaSkeleton : HkReferencedObject {
     public string? Name;
-    public List<int> ParentIndices;
-    public List<HkaBone> Bones;
-    public List<float[]> ReferencePose;
-    public List<float> ReferenceFloats;
-    public List<string> FloatSlots;
-    public List<HkaSkeletonLocalFrameOnBone> LocalFrames;
+    public int[] ParentIndices;
+    public HkaBone[] Bones;
+    public float[][] ReferencePose;
+    public float[] ReferenceFloats;
+    public string[] FloatSlots;
+    public HkaSkeletonLocalFrameOnBone[] LocalFrames;
 }

@@ -2,5 +2,5 @@
 
 public class HkaAnnotationTrack {
     public string? TrackName;
-    public List<HkaAnnotationTrackAnnotation> Annotations;
+    public HkaAnnotationTrackAnnotation[] Annotations;
 }

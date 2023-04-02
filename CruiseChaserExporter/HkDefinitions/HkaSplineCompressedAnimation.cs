@@ -1,4 +1,4 @@
-namespace CruiseChaserExporter.HkDefinitions;
+﻿namespace CruiseChaserExporter.HkDefinitions;
 
 public class HkaSplineCompressedAnimation : HkaAnimation {
     public int? NumFrames;
@@ -8,10 +8,10 @@ public class HkaSplineCompressedAnimation : HkaAnimation {
     public float? BlockDuration;
     public float? BlockInverseDuration;
     public float? FrameDuration;
-    public List<int> BlockOffsets;
-    public List<int> FloatBlockOffsets;
-    public List<int> TransformOffsets;
-    public List<int> FloatOffsets;
-    public List<byte> Data;
+    public int[] BlockOffsets;
+    public int[] FloatBlockOffsets;
+    public int[] TransformOffsets;
+    public int[] FloatOffsets;
+    public byte[] Data;
     public int? Endian;
 }

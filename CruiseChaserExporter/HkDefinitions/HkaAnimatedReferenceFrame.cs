@@ -1,4 +1,3 @@
 ﻿namespace CruiseChaserExporter.HkDefinitions;
 
-public class HkaAnimatedReferenceFrame : HkReferencedObject {
-}
+public class HkaAnimatedReferenceFrame : HkReferencedObject { }

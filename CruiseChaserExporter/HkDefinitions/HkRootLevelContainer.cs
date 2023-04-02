@@ -1,5 +1,5 @@
 namespace CruiseChaserExporter.HkDefinitions;
 
 public class HkRootLevelContainer {
-        public List<HkRootLevelContainerNamedVariant> NamedVariants;
+    public HkRootLevelContainerNamedVariant[] NamedVariants;
 }

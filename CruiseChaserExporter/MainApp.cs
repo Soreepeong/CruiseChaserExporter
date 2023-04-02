@@ -1,4 +1,5 @@
 ﻿using CruiseChaserExporter.Gltf;
+using CruiseChaserExporter.HkAnimationStuff;
 using CruiseChaserExporter.HkDefinitions;
 using CruiseChaserExporter.HkTagfile;
 using Lumina.Data;
@@ -38,10 +39,16 @@ public class MainApp {
             new Lumina.GameData(@"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack");
 
         TagfileParser.Parse(out var nodesSklb, out var definitionsSklb, new(new MemoryStream(GetHkxFromSklb(lumina.GetFile("chara/monster/m0361/skeleton/base/b0001/skl_m0361b0001.sklb")!))));
-        TagfileParser.Parse(out var nodesPap, out var definitionPap, new(new MemoryStream(GetHkxFromPap(lumina.GetFile("chara/monster/m0361/animation/a0001/bt_common/idle_sp/idle_sp_1.pap")!))));
-        var definitions = definitionsSklb.Concat(definitionPap)
-            .DistinctBy(x => Tuple.Create(x.Name, x.Version))
-            .ToList();
+        var definitions = definitionsSklb.ToList();
+        var animNodes = new Dictionary<string, HkNode>();
+        foreach (var path in new[] {"chara/monster/m0361/animation/a0001/bt_common/idle_sp/idle_sp_1.pap"}) {
+            TagfileParser.Parse(out var nodesPap, out var definitionPap,
+                new(new MemoryStream(GetHkxFromPap(lumina.GetFile(path)!))));
+            definitions.AddRange(definitionPap);
+            animNodes[path] = nodesPap;
+        }
+
+        definitions = definitions.DistinctBy(x => Tuple.Create(x.Name, x.Version)).ToList();
         // foreach (var def in definitions)
         //     Console.WriteLine(def.GenerateCSharpCode(NormalizeName));
         
@@ -52,13 +59,14 @@ public class MainApp {
             .ToDictionary(x => x.Name, x => x);
         var defDict = definitions.ToDictionary(x => x, x => typeDict[NormalizeName(x.Name)]);
         
-        var sklb = TagfileUnserializer.Unserialize<HkRootLevelContainer>(nodesSklb, defDict, NormalizeName);
-        var pap = TagfileUnserializer.Unserialize<HkRootLevelContainer>(nodesPap, defDict, NormalizeName);
+        var sklb = TagfileDeserializer.Unserialize<HkRootLevelContainer>(nodesSklb, defDict, NormalizeName);
+        var anims = animNodes.ToDictionary(x => x.Key,
+            x => TagfileDeserializer.Unserialize<HkRootLevelContainer>(x.Value, defDict, NormalizeName));
 
         var xivModel = new Model(lumina.GetFile<MdlFile>("chara/monster/m0361/obj/body/b0001/model/m0361b0001.mdl")!);
 
         var writer = new XivGltfWriter("GLTF", false, true, lumina);
-        if (!writer.AddModel(xivModel, sklb))
+        if (!writer.AddModel(xivModel, sklb, anims))
             throw new InvalidOperationException();
         writer.Save("Z:/test");
     }
