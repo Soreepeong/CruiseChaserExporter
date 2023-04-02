@@ -9,7 +9,7 @@ namespace CruiseChaserExporter.Gltf;
 public partial class XivGltfWriter {
     private unsafe int WriteMaterial(Material xivMaterial) {
         var material = new GltfMaterial {
-            Name = xivMaterial.File?.FilePath.Path,
+            Name = Path.GetFileNameWithoutExtension(xivMaterial.File?.FilePath.Path),
             DoubleSided = true,
             PbrMetallicRoughness = new(),
         };
@@ -19,8 +19,13 @@ public partial class XivGltfWriter {
             var texbuf = _gameData.GetFile<TexFile>(xivTexture.TexturePath)!.TextureBuffer;
             var data = texbuf.Filter(format: TexFile.TextureFormat.B8G8R8A8).RawData;
             var data32 = new ColorRgba32[data.Length / 4];
-            fixed (void* src = data, dst = data32)
-				Buffer.MemoryCopy(src, dst, data.Length, data.Length);
+            for (int i = 0, j = 0; i < data.Length; i += 4, j++) {
+	            data32[j].r = data[i + 2];
+	            data32[j].g = data[i + 1];
+	            data32[j].b = data[i + 0];
+	            data32[j].a = data[i + 3];
+            }
+
             xivTextureMap[xivTexture.TextureUsageRaw] = Tuple.Create(texbuf.Width, texbuf.Height, data32);
         }
 
@@ -78,54 +83,52 @@ public partial class XivGltfWriter {
 							colorSetBlend
 						);
                     }
+                    
+                    xivTextureMap.TryAdd(TextureUsage.SamplerDiffuse, Tuple.Create(normal.Item1, normal.Item2, diffuse));
+                    xivTextureMap.TryAdd(TextureUsage.SamplerSpecular, Tuple.Create(normal.Item1, normal.Item2, specular));
+                    xivTextureMap.TryAdd(TextureUsage.SamplerReflection, Tuple.Create(normal.Item1, normal.Item2, emission));
                 }
 
                 break;
             }
         }
 
-        var num = 0;
         foreach (var (k, v) in xivTextureMap) {
             switch (k)
             {
                 case TextureUsage.SamplerColorMap0:
                 case TextureUsage.SamplerDiffuse:
-                    material.PbrMetallicRoughness ??= new();
-                    material.PbrMetallicRoughness.BaseColorTexture = new() {
-                        Index = AddTexture($"diffuse_{num}.png", v.Item1, v.Item2, v.Item3, SourceAlphaModes.Enable),
+                    (material.PbrMetallicRoughness ??= new()).BaseColorTexture ??= new() {
+                        Index = AddTexture($"{material.Name}/diffuse", v.Item1, v.Item2, v.Item3, SourceAlphaModes.Enable),
                     };
                     break;
                 case TextureUsage.SamplerNormalMap0:
                 case TextureUsage.SamplerNormal:
-                    material.NormalTexture = new() {
-                        Index = AddTexture($"normal_{num}.png", v.Item1, v.Item2, v.Item3, SourceAlphaModes.Enable),
+                    material.NormalTexture ??= new() {
+                        Index = AddTexture($"{material.Name}/normal", v.Item1, v.Item2, v.Item3, SourceAlphaModes.Enable),
                     };
                     break;
                 case TextureUsage.SamplerSpecularMap0:
                 case TextureUsage.SamplerSpecular:
 	                _root.ExtensionsUsed.Add("KHR_materials_specular");
-                    material.Extensions ??= new();
-                    material.Extensions.KhrMaterialsSpecular ??= new();
-                    material.Extensions.KhrMaterialsSpecular.SpecularColorTexture = new() {
-                        Index = AddTexture($"specular_{num}.png", v.Item1, v.Item2, v.Item3, SourceAlphaModes.Enable),
+                    ((material.Extensions ??= new()).KhrMaterialsSpecular ??= new()).SpecularColorTexture ??= new() {
+                        Index = AddTexture($"{material.Name}/specular", v.Item1, v.Item2, v.Item3, SourceAlphaModes.Enable),
                     };
                     break;
                 case TextureUsage.SamplerWaveMap:
-                    material.OcclusionTexture = new() {
-                        Index = AddTexture($"occlusion_{num}.png", v.Item1, v.Item2, v.Item3, SourceAlphaModes.Enable),
+                    material.OcclusionTexture ??= new() {
+                        Index = AddTexture($"{material.Name}/occlusion", v.Item1, v.Item2, v.Item3, SourceAlphaModes.Enable),
                     };
                     break;
                 case TextureUsage.SamplerReflection:
-                    material.EmissiveTexture = new() {
-                        Index = AddTexture($"emissive_{num}.png", v.Item1, v.Item2, v.Item3, SourceAlphaModes.Enable),
+                    material.EmissiveTexture ??= new() {
+                        Index = AddTexture($"{material.Name}/emissive", v.Item1, v.Item2, v.Item3, SourceAlphaModes.Enable),
                     };
                     break;
                 default:
                     Console.WriteLine("Fucked shit, got unhandled TextureUsage {0}: {1}", k, v);
                     break;
             }
-
-            num++;
         }
 
         return AddMaterial(material);

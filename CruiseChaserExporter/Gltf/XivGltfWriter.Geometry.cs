@@ -185,14 +185,17 @@ public partial class XivGltfWriter {
             GetBufferViewOrDefault(indexBufferName) ??
             AddBufferView(indexBufferName, indexBufferArray, GltfBufferViewTarget.ElementArrayBuffer);
 
+        Dictionary<string, int> matMap = new();
+
         for (var i = 0; i < xivModel.Meshes.Length; i++) {
             var xivMesh = xivModel.Meshes[i];
             if (!xivMesh.Types.Contains(Mesh.MeshType.Main))
                 continue;
 
             xivMesh.Material.Update(_gameData);
-            var materialIndex = WriteMaterial(new(
-                _gameData.GetFile<MtrlFile>(xivMesh.Material.ResolvedPath ?? xivMesh.Material.MaterialPath)!));
+            var matPath = xivMesh.Material.ResolvedPath ?? xivMesh.Material.MaterialPath;
+            if (!matMap.TryGetValue(matPath, out var materialIndex))
+                materialIndex = matMap[matPath] = WriteMaterial(new(_gameData.GetFile<MtrlFile>(matPath)!));
 
             if (!WriteMeshOrLogError(out var newPrimitives, $"{rootNodeName}/{i}", xivMesh, indexBufferArray,
                     indexBufferView, materialIndex))
