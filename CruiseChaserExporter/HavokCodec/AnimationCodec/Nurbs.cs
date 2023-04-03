@@ -1,29 +1,32 @@
 ﻿using System.Collections.Immutable;
-using System.Numerics;
 
 namespace CruiseChaserExporter.HavokCodec.AnimationCodec;
 
-public class NurbsQuat {
-    private readonly ImmutableList<Quaternion> _controlPoints;
+public class Nurbs {
+    private readonly int _elementCount;
+    private readonly ImmutableList<float[]> _controlPoints; 
     private readonly ImmutableList<byte> _knots;
     private readonly int _degree;
 
-    public NurbsQuat(IEnumerable<Quaternion> controlPoints, IEnumerable<byte> knots, int degree) {
+    public Nurbs(int elementCount, IEnumerable<float[]> controlPoints, IEnumerable<byte> knots, int degree) {
+        _elementCount = elementCount;
         _controlPoints = controlPoints.ToImmutableList();
         _knots = knots.ToImmutableList();
         _degree = degree;
     }
 
-    public Quaternion this[int t] {
+    public float[] this[int t] {
         get {
-            var span = _findSpan(t);
-            var basis = _bsplineBasis(span, t);
+            var span = _FindSpan(t);
+            var basis = _BsplineBasis(span, t);
 
-            var value = new Quaternion();
-            for (var i = 0; i <= _degree; i++)
-                value += _controlPoints[span - i] * basis[i];
+            var value = new float[_elementCount];
+            for (var i = 0; i <= _degree; i++) {
+                for (var j = 0; j < _elementCount; j++)
+                    value[j] += _controlPoints[span - i][j] * basis[i];
+            }
 
-            return Quaternion.Normalize(value);
+            return value;
         }
     }
 
@@ -32,7 +35,7 @@ public class NurbsQuat {
      * https://github.com/PredatorCZ/HavokLib
      */
 
-    private float[] _bsplineBasis(int span, float t) {
+    private float[] _BsplineBasis(int span, float t) {
         var res = Enumerable.Range(0, _degree + 1).Select(_ => 0f).ToArray();
 
         res[0] = 1f;
@@ -49,7 +52,7 @@ public class NurbsQuat {
         return res;
     }
 
-    private int _findSpan(int t) {
+    private int _FindSpan(int t) {
         if (t >= _knots[_controlPoints.Count])
             return _controlPoints.Count - 1;
 

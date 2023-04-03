@@ -14,7 +14,7 @@ public static class QuaternionTypeExtensions {
             reader.ReadInto(out byte degree);
             var knots = reader.ReadBytes(numItems + degree + 2);
 
-            var rotationControlPoints = new List<Quaternion>();
+            var rotationControlPoints = new List<float[]>();
             for (var i = 0; i <= numItems; ++i) {
                 Quaternion rotation;
 
@@ -26,11 +26,14 @@ public static class QuaternionTypeExtensions {
                         throw new NotSupportedException();
                 }
 
-                rotationControlPoints.Add(rotation);
+                rotationControlPoints.Add(new[] {rotation.X, rotation.Y, rotation.Z, rotation.W});
             }
 
-            var nurbs = new NurbsQuat(rotationControlPoints, knots, degree);
-            return Enumerable.Range(0, numBlockFrames).Select(t => nurbs[t]).ToArray();
+            var nurbs = new Nurbs(4, rotationControlPoints, knots, degree);
+            return Enumerable.Range(0, numBlockFrames)
+                .Select(t => nurbs[t])
+                .Select(x => new Quaternion(x[0], x[1], x[2], x[3]))
+                .ToArray();
         } else if (qt.Static()) {
             Quaternion rotation;
 

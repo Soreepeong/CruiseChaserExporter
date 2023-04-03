@@ -44,41 +44,44 @@ public static class VectorTypeExtensions {
                 reader.ReadInto(out staticz);
             }
 
-            var translationControlPoints = new List<Vector3>();
+            var translationControlPoints = new List<float[]>();
             for (var i = 0; i <= numItems; i++) {
                 // yes, "<="
-                var position = new Vector3();
+                var position = new float[3];
                 switch (quantType) {
                     case QuantizationType.K8Bit:
                         if (vt.SplineX())
-                            position.X = reader.ReadByte() / (float) byte.MaxValue;
+                            position[0] = reader.ReadByte() / (float) byte.MaxValue;
                         if (vt.SplineY())
-                            position.Y = reader.ReadByte() / (float) byte.MaxValue;
+                            position[1] = reader.ReadByte() / (float) byte.MaxValue;
                         if (vt.SplineZ())
-                            position.Z = reader.ReadByte() / (float) byte.MaxValue;
+                            position[2] = reader.ReadByte() / (float) byte.MaxValue;
                         break;
 
                     case QuantizationType.K16Bit:
                         if (vt.SplineX())
-                            position.X = reader.ReadUInt16() / (float) ushort.MaxValue;
+                            position[0] = reader.ReadUInt16() / (float) ushort.MaxValue;
                         if (vt.SplineY())
-                            position.Y = reader.ReadUInt16() / (float) ushort.MaxValue;
+                            position[1] = reader.ReadUInt16() / (float) ushort.MaxValue;
                         if (vt.SplineZ())
-                            position.Z = reader.ReadUInt16() / (float) ushort.MaxValue;
+                            position[2] = reader.ReadUInt16() / (float) ushort.MaxValue;
                         break;
 
                     default:
                         throw new NotSupportedException();
                 }
 
-                position.X = vt.SplineX() ? minx + (maxx - minx) * position.X : staticx;
-                position.Y = vt.SplineY() ? miny + (maxy - miny) * position.Y : staticy;
-                position.Z = vt.SplineZ() ? minz + (maxz - minz) * position.Z : staticz;
+                position[0] = vt.SplineX() ? minx + (maxx - minx) * position[0] : staticx;
+                position[1] = vt.SplineY() ? miny + (maxy - miny) * position[1] : staticy;
+                position[2] = vt.SplineZ() ? minz + (maxz - minz) * position[2] : staticz;
                 translationControlPoints.Add(position);
             }
 
-            var nurbs = new NurbsVec3(translationControlPoints, knots, degree);
-            return Enumerable.Range(0, numBlockFrames).Select(t => nurbs[t]).ToArray();
+            var nurbs = new Nurbs(3, translationControlPoints, knots, degree);
+            return Enumerable.Range(0, numBlockFrames)
+                .Select(t => nurbs[t])
+                .Select(x => new Vector3(x[0], x[1], x[2]))
+                .ToArray();
         } else if (vt.Static()) {
             return new[] {
                 new Vector3(
