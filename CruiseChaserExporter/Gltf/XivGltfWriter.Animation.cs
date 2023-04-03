@@ -6,6 +6,59 @@ using CruiseChaserExporter.HkDefinitions;
 namespace CruiseChaserExporter.Gltf;
 
 public partial class XivGltfWriter {
+    private static void ExtendAnimationTrack<T>(
+        IReadOnlyList<T> inValues,
+        List<T> outValues,
+        List<float> outTimes,
+        HkAnimationDecoder anim) {
+        if (inValues.Count == 0)
+            return;
+        
+        var timeBase = 0f;
+        if (outTimes.Any()) {
+            timeBase = outTimes[^1];
+            outTimes.RemoveAt(outTimes.Count - 1);
+            outValues.RemoveAt(outValues.Count - 1);
+        }
+                    
+        if (inValues.Count == 1) {
+            outTimes.Add(timeBase);
+            outTimes.Add(Math.Min(anim.Duration, timeBase + anim.BlockDuration));
+            outValues.Add(inValues[0]);
+            outValues.Add(inValues[0]);
+        } else {
+            outTimes.AddRange(Enumerable.Range(0, inValues.Count).Select(x => timeBase + x * anim.FrameDuration));
+            outValues.AddRange(inValues);
+        }
+    }
+
+    private void AddAnimationComponent<T>(
+        GltfAnimation target,
+        GltfAnimationChannelTargetPath purpose,
+        int boneNodeIndex,
+        IEnumerable<T> values,
+        IEnumerable<float> times) where T : unmanaged {
+        
+        var valueArray = values.ToArray();
+        if (!valueArray.Any())
+            return;
+        
+        var timesArray = times.ToArray();
+        
+        target.Samplers.Add(new() {
+            Input = AddAccessor($"anim/{target.Name}/{boneNodeIndex}/tt", -1, null, timesArray),
+            Output = AddAccessor($"anim/{target.Name}/{boneNodeIndex}/tv", -1, null, valueArray),
+            Interpolation = GltfAnimationSamplerInterpolation.Linear,
+        });
+        target.Channels.Add(new() {
+            Sampler = target.Samplers.Count - 1,
+            Target = new() {
+                Node = boneNodeIndex,
+                Path = purpose,
+            },
+        });
+    }
+    
     private int WriteAnimations(
         string animName,
         HkRootLevelContainer animationContainerUntyped,
@@ -21,127 +74,57 @@ public partial class XivGltfWriter {
             var anim = HkAnimationDecoder.Decode(animationContainer.Animations[animIndex]);
             var trackIndexToBoneIndex = animationContainer.Bindings[animIndex].TransformTrackToBoneIndices;
 
-            for (var animSubIndex = 0; animSubIndex < anim.Tracks.Count; animSubIndex++) {
-                var tracks = anim.Tracks[animSubIndex];
-                var newAnimation = new GltfAnimation {
-                    Name = $"{animName}/{animIndex}/{animSubIndex}",
-                };
+            var trackCount = trackIndexToBoneIndex.Length;
+            var translateTimes = Enumerable.Range(0, trackCount).Select(_ => new List<float>()).ToArray();
+            var translates = Enumerable.Range(0, trackCount).Select(_ => new List<Vector3>()).ToArray();
+            var rotateTimes = Enumerable.Range(0, trackCount).Select(_ => new List<float>()).ToArray();
+            var rotates = Enumerable.Range(0, trackCount).Select(_ => new List<Quaternion>()).ToArray();
+            var scaleTimes = Enumerable.Range(0, trackCount).Select(_ => new List<float>()).ToArray();
+            var scales = Enumerable.Range(0, trackCount).Select(_ => new List<Vector3>()).ToArray();
 
+            foreach (var tracks in anim.TrackBlocks) {
                 for (var trackIndex = 0; trackIndex < tracks.Count; trackIndex++) {
-                    var boneIndex = trackIndexToBoneIndex[trackIndex];
                     var trs = tracks[trackIndex];
-
-                    float[]? times;
-                    Vector3[]? translates;
-                    Quaternion[]? rotates;
-                    Vector3[]? scales;
-
-                    switch (trs.Translate.Length) {
-                        case 1:
-                            times = new[] {0, anim.Duration};
-                            translates = new[] {trs.Translate[0], trs.Translate[0]};
-                            break;
-                        case > 1:
-                            times = Enumerable.Range(0, trs.Translate.Length).Select(x => x * anim.FrameDuration)
-                                .ToArray();
-                            translates = trs.Translate;
-                            break;
-                        default:
-                            times = null;
-                            translates = null;
-                            break;
-                    }
-
-                    if (translates is not null && times is not null) {
-                        newAnimation.Samplers.Add(new() {
-                            Input = AddAccessor(
-                                $"animation/{animName}/{animIndex}/{animSubIndex}/translate/time", -1, null, times),
-                            Output = AddAccessor(
-                                $"animation/{animName}/{animIndex}/{animSubIndex}/translate/vec3", -1, null,
-                                translates),
-                            Interpolation = GltfAnimationSamplerInterpolation.Linear,
-                        });
-                        newAnimation.Channels.Add(new() {
-                            Sampler = newAnimation.Samplers.Count - 1,
-                            Target = new() {
-                                Node = boneIndexToNodeIndex[boneIndex],
-                                Path = GltfAnimationChannelTargetPath.Translation,
-                            },
-                        });
-                    }
-
-                    switch (trs.Rotate.Length) {
-                        case 1:
-                            times = new[] {0, anim.Duration};
-                            rotates = new[] {trs.Rotate[0], trs.Rotate[0]};
-                            break;
-                        case > 1:
-                            times = Enumerable.Range(0, trs.Rotate.Length).Select(x => x * anim.FrameDuration)
-                                .ToArray();
-                            rotates = trs.Rotate;
-                            break;
-                        default:
-                            times = null;
-                            rotates = null;
-                            break;
-                    }
-
-                    if (rotates is not null && times is not null) {
-                        newAnimation.Samplers.Add(new() {
-                            Input = AddAccessor(
-                                $"animation/{animName}/{animIndex}/{animSubIndex}/rotate/time", -1, null, times),
-                            Output = AddAccessor(
-                                $"animation/{animName}/{animIndex}/{animSubIndex}/rotate/quat", -1, null, rotates),
-                            Interpolation = GltfAnimationSamplerInterpolation.Linear,
-                        });
-                        newAnimation.Channels.Add(new() {
-                            Sampler = newAnimation.Samplers.Count - 1,
-                            Target = new() {
-                                Node = boneIndexToNodeIndex[boneIndex],
-                                Path = GltfAnimationChannelTargetPath.Rotation,
-                            },
-                        });
-                    }
-
-                    switch (trs.Scale.Length) {
-                        case 1:
-                            times = new[] {0, anim.Duration};
-                            scales = new[] {trs.Scale[0], trs.Scale[0]};
-                            break;
-                        case > 1:
-                            times = Enumerable.Range(0, trs.Scale.Length).Select(x => x * anim.FrameDuration).ToArray();
-                            scales = trs.Scale;
-                            break;
-                        default:
-                            times = null;
-                            scales = null;
-                            break;
-                    }
-
-                    if (scales is not null && times is not null) {
-                        newAnimation.Samplers.Add(new() {
-                            Input = AddAccessor(
-                                $"animation/{animName}/{animIndex}/{animSubIndex}/scale/time", -1, null, times),
-                            Output = AddAccessor(
-                                $"animation/{animName}/{animIndex}/{animSubIndex}/scale/vec3", -1, null, scales),
-                            Interpolation = GltfAnimationSamplerInterpolation.Linear,
-                        });
-                        newAnimation.Channels.Add(new() {
-                            Sampler = newAnimation.Samplers.Count - 1,
-                            Target = new() {
-                                Node = boneIndexToNodeIndex[boneIndex],
-                                Path = GltfAnimationChannelTargetPath.Scale,
-                            },
-                        });
-                    }
+                    ExtendAnimationTrack(trs.Translate, translates[trackIndex], translateTimes[trackIndex], anim);
+                    ExtendAnimationTrack(trs.Rotate, rotates[trackIndex], rotateTimes[trackIndex], anim);
+                    ExtendAnimationTrack(trs.Scale, scales[trackIndex], scaleTimes[trackIndex], anim);
                 }
-
-                if (!newAnimation.Channels.Any() || !newAnimation.Samplers.Any())
-                    continue;
-
-                AddAnimation(newAnimation);
-                numAnimationsWritten++;
             }
+
+            var newAnimation = new GltfAnimation {
+                Name = $"{animName}/{animIndex}",
+            };
+
+            for (var trackIndex = 0; trackIndex < trackCount; trackIndex++) {
+                var boneNodeIndex = boneIndexToNodeIndex[trackIndexToBoneIndex[trackIndex]];
+                
+                AddAnimationComponent(
+                    newAnimation,
+                    GltfAnimationChannelTargetPath.Translation,
+                    boneNodeIndex,
+                    translates[trackIndex],
+                    translateTimes[trackIndex]);
+
+                AddAnimationComponent(
+                    newAnimation,
+                    GltfAnimationChannelTargetPath.Rotation,
+                    boneNodeIndex,
+                    rotates[trackIndex],
+                    rotateTimes[trackIndex]);
+
+                AddAnimationComponent(
+                    newAnimation,
+                    GltfAnimationChannelTargetPath.Scale,
+                    boneNodeIndex,
+                    scales[trackIndex],
+                    scaleTimes[trackIndex]);
+            }
+
+            if (!newAnimation.Channels.Any() || !newAnimation.Samplers.Any())
+                continue;
+
+            AddAnimation(newAnimation);
+            numAnimationsWritten++;
         }
 
         return numAnimationsWritten;

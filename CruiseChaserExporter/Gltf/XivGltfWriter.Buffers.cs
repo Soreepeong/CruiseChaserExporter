@@ -156,6 +156,14 @@ public partial class XivGltfWriter {
             componentType = GltfAccessorComponentTypes.u32;
         else if (typeof(T) == typeof(float))
             componentType = GltfAccessorComponentTypes.f32;
+        else if (typeof(T) == typeof(Quaternion))
+            return AddAccessor(baseName, bufferView, bufferViewTarget, (Quaternion[])(object)data, start, end);
+        else if (typeof(T) == typeof(Vector2))
+            return AddAccessor(baseName, bufferView, bufferViewTarget, (Vector2[])(object)data, start, end);
+        else if (typeof(T) == typeof(Vector3))
+            return AddAccessor(baseName, bufferView, bufferViewTarget, (Vector3[])(object)data, start, end);
+        else if (typeof(T) == typeof(Vector4))
+            return AddAccessor(baseName, bufferView, bufferViewTarget, (Vector4[])(object)data, start, end);
         else
             throw new NotImplementedException();
 

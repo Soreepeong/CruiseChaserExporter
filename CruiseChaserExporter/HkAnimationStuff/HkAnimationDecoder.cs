@@ -6,17 +6,17 @@ using CruiseChaserExporter.Util;
 namespace CruiseChaserExporter.HkAnimationStuff;
 
 public class HkAnimationDecoder {
-    public readonly ImmutableList<ImmutableList<AnimationTrack>> Tracks;
+    public readonly ImmutableList<ImmutableList<AnimationTrack>> TrackBlocks;
     public readonly float Duration;
     public readonly float BlockDuration;
     public readonly float FrameDuration;
 
     public HkAnimationDecoder(
-        ImmutableList<ImmutableList<AnimationTrack>> tracks,
+        ImmutableList<ImmutableList<AnimationTrack>> trackBlocks,
         float duration,
         float blockDuration,
         float frameDuration) {
-        Tracks = tracks;
+        TrackBlocks = trackBlocks;
         Duration = duration;
         BlockDuration = blockDuration;
         FrameDuration = frameDuration;

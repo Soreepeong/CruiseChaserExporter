@@ -111,11 +111,11 @@ public class TagfileDeserializer {
                 }
             }
             default:
-                throw new ArgumentOutOfRangeException();
+                throw new InvalidDataException();
         }
     }
 
-    public static T Unserialize<T>(
+    public static T Deserialize<T>(
         HkNode node,
         Dictionary<HkDefinition, Type> definitions,
         Func<string, string>? nameTransformer = null) =>
