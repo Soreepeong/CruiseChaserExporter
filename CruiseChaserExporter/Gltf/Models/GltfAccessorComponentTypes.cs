@@ -1,7 +1,6 @@
 ﻿namespace CruiseChaserExporter.Gltf.Models;
 
-public enum GltfAccessorComponentTypes
-{
+public enum GltfAccessorComponentTypes {
     s8 = 5120,
     u8 = 5121,
     s16 = 5122,

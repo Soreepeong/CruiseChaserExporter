@@ -31,7 +31,8 @@ public class HkValueVector : IHkValue {
                 .ToImmutableList());
     }
 
-    internal static HkValueVector ReadVector(TagfileParser tagfileParser, HkFieldType? innerType, int innerCount, int outerCount) {
+    internal static HkValueVector ReadVector(TagfileParser tagfileParser, HkFieldType? innerType, int innerCount,
+        int outerCount) {
         if (innerType is null)
             throw new InvalidDataException("Array cannot have null innerType");
         if (innerCount == 4)

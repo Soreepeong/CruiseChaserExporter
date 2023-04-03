@@ -89,15 +89,16 @@ public class TagfileParser {
                     while (remainingFields.Any()) {
                         var f = remainingFields[^1];
                         remainingFields.RemoveAt(remainingFields.Count - 1);
-                        
+
                         if (f.InnerType is not null && !knownFields.Contains(f.InnerType)) {
                             knownFields.Add(f.InnerType);
                             remainingFields.Add(f.InnerType);
                         }
-                        
+
                         if (f.ReferencedName is not null)
                             f.ReferenceDefinition = Definitions.First(x => x?.Name == f.ReferencedName);
                     }
+
                     return;
 
                 default:
@@ -116,8 +117,7 @@ public class TagfileParser {
             parser._Parse();
             rootNode = parser.Nodes.First()!;
             definitions = parser.Definitions.Where(x => x != null).Select(x => x!).ToImmutableList();
-        }
-        finally {
+        } finally {
             if (closeAfter)
                 reader.Close();
         }

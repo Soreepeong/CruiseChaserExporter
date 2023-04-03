@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfMesh
-{
+public class GltfMesh {
     [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
     public string? Name;
 

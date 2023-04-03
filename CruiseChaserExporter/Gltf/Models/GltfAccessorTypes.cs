@@ -1,7 +1,6 @@
 ﻿namespace CruiseChaserExporter.Gltf.Models;
 
-public enum GltfAccessorTypes
-{
+public enum GltfAccessorTypes {
     Scalar,
     Vec2,
     Vec3,

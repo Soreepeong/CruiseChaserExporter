@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfAccessor
-{
+public class GltfAccessor {
     [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
     public string? Name;
 
@@ -24,10 +23,8 @@ public class GltfAccessor
     public object? Max;
 
     [JsonProperty("type")]
-    public string TypeString
-    {
-        get => Type switch
-        {
+    public string TypeString {
+        get => Type switch {
             GltfAccessorTypes.Scalar => "SCALAR",
             GltfAccessorTypes.Vec2 => "VEC2",
             GltfAccessorTypes.Vec3 => "VEC3",
@@ -37,8 +34,7 @@ public class GltfAccessor
             GltfAccessorTypes.Mat4 => "MAT4",
             _ => throw new ArgumentOutOfRangeException(nameof(Type)),
         };
-        set => Type = value switch
-        {
+        set => Type = value switch {
             "SCALAR" => GltfAccessorTypes.Scalar,
             "VEC2" => GltfAccessorTypes.Vec2,
             "VEC3" => GltfAccessorTypes.Vec3,

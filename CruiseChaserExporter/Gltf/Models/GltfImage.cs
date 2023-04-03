@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfImage
-{
+public class GltfImage {
     [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
     public string? Name;
 

@@ -20,7 +20,7 @@ public class HkFieldType {
         ReferencedName = referencedName;
         Length = length;
     }
-    
+
     public HkDefinition? ReferenceDefinition { get; internal set; }
 
     public override string ToString() => ReferencedName == null
@@ -28,13 +28,15 @@ public class HkFieldType {
             HkFieldArrayType.NotAnArray => $"{ElementType}",
             HkFieldArrayType.VariableLength when ElementType == HkFieldElementType.Array => $"{InnerType}[?]",
             HkFieldArrayType.FixedLength when ElementType == HkFieldElementType.Array => $"{InnerType}[{Length}]",
-            _ =>$"{ElementType}[INVALID]"
+            _ => $"{ElementType}[INVALID]"
         }
         : ArrayType switch {
             HkFieldArrayType.NotAnArray => $"{ElementType}<{ReferencedName}>",
-            HkFieldArrayType.VariableLength when ElementType == HkFieldElementType.Array => $"{InnerType}<{ReferencedName}>[?]",
-            HkFieldArrayType.FixedLength when ElementType == HkFieldElementType.Array => $"{InnerType}<{ReferencedName}>[{Length}]",
-            _ =>$"{ElementType}<{ReferencedName}>[INVALID]"
+            HkFieldArrayType.VariableLength when ElementType == HkFieldElementType.Array =>
+                $"{InnerType}<{ReferencedName}>[?]",
+            HkFieldArrayType.FixedLength when ElementType == HkFieldElementType.Array =>
+                $"{InnerType}<{ReferencedName}>[{Length}]",
+            _ => $"{ElementType}<{ReferencedName}>[INVALID]"
         };
 
     public string GenerateCSharpTypeCode(Func<string, string>? nameTransformer) {
@@ -51,9 +53,13 @@ public class HkFieldType {
                     case HkFieldElementType.Float:
                         return "float";
                     case HkFieldElementType.Reference:
-                        return ReferencedName != null ? nameTransformer(ReferencedName!) : throw new NullReferenceException();
+                        return ReferencedName != null
+                            ? nameTransformer(ReferencedName!)
+                            : throw new NullReferenceException();
                     case HkFieldElementType.Struct:
-                        return ReferencedName != null ? nameTransformer(ReferencedName!) : throw new NullReferenceException();
+                        return ReferencedName != null
+                            ? nameTransformer(ReferencedName!)
+                            : throw new NullReferenceException();
                     case HkFieldElementType.String:
                         return "string";
                     case HkFieldElementType.Array:

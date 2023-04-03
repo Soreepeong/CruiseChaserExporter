@@ -8,7 +8,7 @@ public class HkValueFloat : IHkValue {
     }
 
     public override string ToString() => $"{Value}";
-    
+
     public static implicit operator float(HkValueFloat d) => d.Value;
 
     internal static HkValueFloat Read(TagfileParser tagfileParser) => new(tagfileParser.ReadFloat());

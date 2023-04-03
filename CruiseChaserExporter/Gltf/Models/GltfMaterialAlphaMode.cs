@@ -1,7 +1,6 @@
 ﻿namespace CruiseChaserExporter.Gltf.Models;
 
-public enum GltfMaterialAlphaMode
-{
+public enum GltfMaterialAlphaMode {
     Opaque,
     Mask,
     Blend,

@@ -10,7 +10,7 @@ public class HkValueByte : IHkValue {
     }
 
     public override string ToString() => $"{Value}";
-    
+
     public static implicit operator byte(HkValueByte d) => d.Value;
 
     internal static HkValueByte Read(TagfileParser tagfileParser) => new(tagfileParser.ReadByte());

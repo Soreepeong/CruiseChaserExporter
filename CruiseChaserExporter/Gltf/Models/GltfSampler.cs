@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfSampler
-{
+public class GltfSampler {
     [JsonProperty("magFilter")] public GltfSamplerFilters MagFilter = GltfSamplerFilters.Linear;
 
     [JsonProperty("minFilter")] public GltfSamplerFilters MinFilter = GltfSamplerFilters.LinearMipmapLinear;

@@ -10,7 +10,7 @@ public class HkValueInt : IHkValue {
     }
 
     public override string ToString() => $"{Value}";
-    
+
     public static implicit operator int(HkValueInt d) => d.Value;
 
     internal static HkValueInt Read(TagfileParser tagfileParser) => new(tagfileParser.ReadInt());

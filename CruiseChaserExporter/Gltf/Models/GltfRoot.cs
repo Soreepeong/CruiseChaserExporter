@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfRoot
-{
+public class GltfRoot {
     [JsonProperty("asset")] public GltfAsset Asset = new();
 
     [JsonProperty("extensionsUsed")] public HashSet<string> ExtensionsUsed = new();

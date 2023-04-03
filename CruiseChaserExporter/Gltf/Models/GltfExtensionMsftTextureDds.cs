@@ -2,7 +2,6 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfExtensionMsftTextureDds
-{
+public class GltfExtensionMsftTextureDds {
     [JsonProperty("source")] public int Source;
 }

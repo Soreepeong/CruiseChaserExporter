@@ -1,7 +1,6 @@
 ﻿namespace CruiseChaserExporter.Gltf.Models;
 
-public enum GltfSamplerFilters
-{
+public enum GltfSamplerFilters {
     Nearest = 9728,
     Linear = 9729,
     NearestMipmapNearest = 9984,

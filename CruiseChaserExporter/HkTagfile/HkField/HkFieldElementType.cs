@@ -1,4 +1,4 @@
-﻿namespace CruiseChaserExporter.HkTagfile.HkField; 
+﻿namespace CruiseChaserExporter.HkTagfile.HkField;
 
 public enum HkFieldElementType {
     Void,

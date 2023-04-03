@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfMeshPrimitive
-{
+public class GltfMeshPrimitive {
     [JsonProperty("attributes")] public GltfMeshPrimitiveAttributes Attributes = new();
 
     [JsonProperty("indices", NullValueHandling = NullValueHandling.Ignore)]

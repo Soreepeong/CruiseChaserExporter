@@ -143,7 +143,7 @@ public partial class XivGltfWriter {
             var boneSet = xivMesh.BoneTable
                 .Select(b => xivMesh.Parent.StringOffsetToStringMap[(int) xivMesh.Parent.File!.BoneNameOffsets[b]])
                 .ToArray();
-            
+
             var indices = xivMesh.Vertices
                 .Select(x => new TypedVec4<ushort>(
                     (ushort) (x.BlendWeights!.Value.X == 0 ? 0 : boneNameToBoneIndex[boneSet[x.BlendIndices[0]]]),

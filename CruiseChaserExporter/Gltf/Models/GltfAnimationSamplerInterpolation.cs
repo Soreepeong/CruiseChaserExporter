@@ -1,7 +1,6 @@
 ﻿namespace CruiseChaserExporter.Gltf.Models;
 
-public enum GltfAnimationSamplerInterpolation
-{
+public enum GltfAnimationSamplerInterpolation {
     Linear,
     Step,
     CubicSpline,

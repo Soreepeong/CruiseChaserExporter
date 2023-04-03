@@ -53,13 +53,13 @@ public static class BinaryReaderExtensions {
         const int delta = 0x801;
         const float fractal = 0.000345436f;
 
-        var n = (ulong)reader.ReadUInt32();
-        n |= (ulong)reader.ReadByte() << 32;
+        var n = (ulong) reader.ReadUInt32();
+        n |= (ulong) reader.ReadByte() << 32;
 
-        var x = (int)((n >> 0) & 0xFFF);
-        var y = (int)((n >> 12) & 0xFFF);
-        var z = (int)((n >> 24) & 0xFFF);
-        var shift = (int)((n >> 36) & 0x3);
+        var x = (int) ((n >> 0) & 0xFFF);
+        var y = (int) ((n >> 12) & 0xFFF);
+        var z = (int) ((n >> 24) & 0xFFF);
+        var shift = (int) ((n >> 36) & 0x3);
         var invert = 0 != ((n >> 38) & 0x1);
         var invalid = 0 != ((n >> 39) & 0x1);
 
@@ -76,7 +76,7 @@ public static class BinaryReaderExtensions {
 
         for (var i = 0; i < 3 - shift; ++i)
             (tmp[3 - i], tmp[2 - i]) = (tmp[2 - i], tmp[3 - i]);
-        
+
         return new(tmp[0], tmp[1], tmp[2], tmp[3]);
     }
 }

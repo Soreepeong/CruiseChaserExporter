@@ -115,7 +115,7 @@ public partial class XivGltfWriter {
 
         fixed (void* src = data)
         fixed (void* dst = target)
-            Buffer.MemoryCopy((byte*)src + dataOffset, dst, paddedSize, rawSize);
+            Buffer.MemoryCopy((byte*) src + dataOffset, dst, paddedSize, rawSize);
 
         _root.BufferViews.Add(new() {
             Name = baseName is null ? null : $"{baseName}/bufferView",
@@ -412,8 +412,7 @@ public partial class XivGltfWriter {
             if (sourceAlphaMode == SourceAlphaModes.Enable) {
                 for (var i = 0; i < buf.Length; i++)
                     buf[i].A = (byte) (buf[i].A * newOpacity);
-            }
-            else {
+            } else {
                 var newAlphaByte = (byte) (255 * newOpacity.Value);
                 for (var i = 0; i < buf.Length; i++)
                     buf[i].A = newAlphaByte;
@@ -421,13 +420,11 @@ public partial class XivGltfWriter {
 
             using var image = Image.LoadPixelData<Rgba32>(buf, width, height);
             image.SaveAsPng(ms);
-        }
-        else {
+        } else {
             if (sourceAlphaMode == SourceAlphaModes.Enable) {
                 using var image = Image.LoadPixelData<Rgba32>(raw.ToRgba32(), width, height);
                 image.SaveAsPng(ms);
-            }
-            else {
+            } else {
                 using var image = Image.LoadPixelData<Rgb24>(raw.ToRgb24(), width, height);
                 image.SaveAsPng(ms);
             }

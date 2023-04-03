@@ -2,10 +2,8 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfTextureInfo
-{
-    [JsonProperty("index")]
-    public int Index;
+public class GltfTextureInfo {
+    [JsonProperty("index")] public int Index;
 
     [JsonProperty("texCoord", DefaultValueHandling = DefaultValueHandling.Ignore)]
     public int TexCoord;

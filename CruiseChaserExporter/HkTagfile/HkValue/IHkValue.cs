@@ -31,13 +31,15 @@ public interface IHkValue {
                 HkFieldElementType.Integer => HkValueInt.ReadVector(tagfileParser, count),
                 HkFieldElementType.Float => HkValueFloat.ReadVector(tagfileParser, count),
                 HkFieldElementType.Reference => HkValueNode.ReadReferenceVector(tagfileParser, count),
-                HkFieldElementType.Struct => HkValueNode.ReadStructVector(tagfileParser, fieldType.ReferencedName, count),
+                HkFieldElementType.Struct => HkValueNode.ReadStructVector(tagfileParser, fieldType.ReferencedName,
+                    count),
                 HkFieldElementType.String => HkValueString.ReadVector(tagfileParser, count),
                 HkFieldElementType.Array => throw new InvalidDataException("Inconsistent state detected"),
                 _ => throw new ArgumentOutOfRangeException(nameof(fieldType), fieldType, "Single/ElementType")
             },
             HkFieldArrayType.VariableLength => throw new NotSupportedException(),
-            HkFieldArrayType.FixedLength => HkValueVector.ReadVector(tagfileParser, fieldType.InnerType, fieldType.Length,
+            HkFieldArrayType.FixedLength => HkValueVector.ReadVector(tagfileParser, fieldType.InnerType,
+                fieldType.Length,
                 count),
             _ => throw new ArgumentOutOfRangeException(nameof(fieldType), fieldType, "SequenceType")
         };

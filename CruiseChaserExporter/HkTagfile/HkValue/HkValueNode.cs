@@ -20,7 +20,7 @@ public class HkValueNode : IHkValue {
     private string DescribeNode() => _nodeIndex < 0 || _nodes.Count <= _nodeIndex
         ? "<out of range>"
         : _nodes[_nodeIndex]?.ToString() ?? "<not yet available>";
-    
+
     public static implicit operator HkNode(HkValueNode d) => d.Node;
 
     internal static HkValueNode ReadReference(TagfileParser tagfileParser) {

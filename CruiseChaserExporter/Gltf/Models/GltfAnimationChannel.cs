@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfAnimationChannel
-{
+public class GltfAnimationChannel {
     /// <summary>
     /// The index of a sampler in this animation used to compute the value for the target.
     /// </summary>

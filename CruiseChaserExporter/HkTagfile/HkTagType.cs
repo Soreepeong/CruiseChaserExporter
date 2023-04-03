@@ -1,4 +1,4 @@
-﻿namespace CruiseChaserExporter.HkTagfile; 
+﻿namespace CruiseChaserExporter.HkTagfile;
 
 public enum HkTagType {
     Metadata = 1,

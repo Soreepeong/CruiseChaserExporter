@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfMaterialPbrMetallicRoughness
-{
+public class GltfMaterialPbrMetallicRoughness {
     [JsonProperty("baseColorFactor", NullValueHandling = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Ignore)]
     public float[]? BaseColorFactor = {1f, 1f, 1f, 1f};

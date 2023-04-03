@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfAnimationChannelTarget
-{
+public class GltfAnimationChannelTarget {
     /// <summary>
     /// The index of the node to animate. When undefined, the animated object **MAY** be defined by an extension.
     /// </summary>
@@ -22,18 +21,15 @@ public class GltfAnimationChannelTarget
     [JsonIgnore] public GltfAnimationChannelTargetPath Path;
 
     [JsonProperty("path")]
-    public string PathString
-    {
-        get => Path switch
-        {
+    public string PathString {
+        get => Path switch {
             GltfAnimationChannelTargetPath.Translation => "translation",
             GltfAnimationChannelTargetPath.Rotation => "rotation",
             GltfAnimationChannelTargetPath.Scale => "scale",
             GltfAnimationChannelTargetPath.Weights => "weights",
             _ => throw new ArgumentOutOfRangeException(),
         };
-        set => Path = value switch
-        {
+        set => Path = value switch {
             "translation" => GltfAnimationChannelTargetPath.Translation,
             "rotation" => GltfAnimationChannelTargetPath.Rotation,
             "scale" => GltfAnimationChannelTargetPath.Scale,

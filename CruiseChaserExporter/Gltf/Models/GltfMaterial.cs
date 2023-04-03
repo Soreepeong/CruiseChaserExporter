@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfMaterial
-{
+public class GltfMaterial {
     [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
     public string? Name;
 
@@ -34,18 +33,15 @@ public class GltfMaterial
     public GltfExtensions? Extensions;
 
     [JsonProperty("alphaMode", NullValueHandling = NullValueHandling.Ignore)]
-    public string? AlphaModeString
-    {
-        get => AlphaMode switch
-        {
+    public string? AlphaModeString {
+        get => AlphaMode switch {
             null => null,
             GltfMaterialAlphaMode.Opaque => "OPAQUE",
             GltfMaterialAlphaMode.Mask => "MASK",
             GltfMaterialAlphaMode.Blend => "BLEND",
             _ => throw new ArgumentOutOfRangeException(nameof(AlphaMode)),
         };
-        set => AlphaMode = value switch
-        {
+        set => AlphaMode = value switch {
             null => null,
             "OPAQUE" => GltfMaterialAlphaMode.Opaque,
             "MASK" => GltfMaterialAlphaMode.Mask,

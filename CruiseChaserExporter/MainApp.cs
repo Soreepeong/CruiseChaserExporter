@@ -6,7 +6,7 @@ using Lumina.Data;
 using Lumina.Data.Files;
 using Lumina.Models.Models;
 
-namespace CruiseChaserExporter; 
+namespace CruiseChaserExporter;
 
 public class MainApp {
     private static byte[] GetHkxFromSklb(FileResource file) {
@@ -33,12 +33,14 @@ public class MainApp {
     }
 
     private static string NormalizeName(string x) => char.IsUpper(x[0]) ? x : char.ToUpperInvariant(x[0]) + x[1..];
-    
+
     public static void Main() {
         var lumina =
             new Lumina.GameData(@"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack");
 
-        TagfileParser.Parse(out var nodesSklb, out var definitionsSklb, new(new MemoryStream(GetHkxFromSklb(lumina.GetFile("chara/monster/m0361/skeleton/base/b0001/skl_m0361b0001.sklb")!))));
+        TagfileParser.Parse(out var nodesSklb, out var definitionsSklb,
+            new(new MemoryStream(
+                GetHkxFromSklb(lumina.GetFile("chara/monster/m0361/skeleton/base/b0001/skl_m0361b0001.sklb")!))));
         var definitions = definitionsSklb.ToList();
         var animNodes = new Dictionary<string, HkNode>();
         foreach (var path in new[] {"chara/monster/m0361/animation/a0001/bt_common/idle_sp/idle_sp_1.pap"}) {
@@ -51,14 +53,14 @@ public class MainApp {
         definitions = definitions.DistinctBy(x => Tuple.Create(x.Name, x.Version)).ToList();
         // foreach (var def in definitions)
         //     Console.WriteLine(def.GenerateCSharpCode(NormalizeName));
-        
+
         var typeDict = AppDomain.CurrentDomain
             .GetAssemblies()
             .SelectMany(x => x.GetTypes())
             .Where(x => x.Namespace == typeof(HkRootLevelContainer).Namespace)
             .ToDictionary(x => x.Name, x => x);
         var defDict = definitions.ToDictionary(x => x, x => typeDict[NormalizeName(x.Name)]);
-        
+
         var sklb = TagfileDeserializer.Unserialize<HkRootLevelContainer>(nodesSklb, defDict, NormalizeName);
         var anims = animNodes.ToDictionary(x => x.Key,
             x => TagfileDeserializer.Unserialize<HkRootLevelContainer>(x.Value, defDict, NormalizeName));

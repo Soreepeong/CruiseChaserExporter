@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfMeshPrimitiveAttributes
-{
+public class GltfMeshPrimitiveAttributes {
     /// <summary>
     /// Unitless XYZ vertex positions.
     /// </summary>

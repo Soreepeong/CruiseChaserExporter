@@ -8,7 +8,7 @@ namespace CruiseChaserExporter.Util;
 public class TaggedLogger {
     public static LogLevelEnum LogLevel = LogLevelEnum.Debug;
     public static LogLevelEnum DebugLevel = LogLevelEnum.Debug;
-    
+
     private const char IndentChar = ' ';
     private const int IndentMultiplier = 2;
 
@@ -113,8 +113,7 @@ public class TaggedLogger {
         if (e is AggregateException ae) {
             foreach (var ie in ae.InnerExceptions)
                 FormatException(sb, ie, depth + 1);
-        }
-        else if (e.StackTrace is { } st) {
+        } else if (e.StackTrace is { } st) {
             sb.Append(IndentChar, depth * IndentMultiplier)
                 .Append(st.ReplaceLineEndings("\n" + new string(IndentChar, depth * IndentMultiplier)))
                 .AppendLine();

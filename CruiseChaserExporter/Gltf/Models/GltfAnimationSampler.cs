@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfAnimationSampler
-{
+public class GltfAnimationSampler {
     /// <summary>
     /// The index of an accessor containing keyframe timestamps.
     /// </summary>
@@ -25,17 +24,14 @@ public class GltfAnimationSampler
     [JsonIgnore] public GltfAnimationSamplerInterpolation Interpolation;
 
     [JsonProperty("interpolation")]
-    public string InterpolationString
-    {
-        get => Interpolation switch
-        {
+    public string InterpolationString {
+        get => Interpolation switch {
             GltfAnimationSamplerInterpolation.Linear => "LINEAR",
             GltfAnimationSamplerInterpolation.Step => "STEP",
             GltfAnimationSamplerInterpolation.CubicSpline => "CUBICSPLINE",
             _ => throw new ArgumentOutOfRangeException(),
         };
-        set => Interpolation = value switch
-        {
+        set => Interpolation = value switch {
             "LINEAR" => GltfAnimationSamplerInterpolation.Linear,
             "STEP" => GltfAnimationSamplerInterpolation.Step,
             "CUBICSPLINE" => GltfAnimationSamplerInterpolation.CubicSpline,

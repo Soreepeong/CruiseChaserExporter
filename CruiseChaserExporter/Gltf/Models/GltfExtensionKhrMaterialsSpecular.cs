@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfExtensionKhrMaterialsSpecular
-{
+public class GltfExtensionKhrMaterialsSpecular {
     [JsonProperty("specularFactor", DefaultValueHandling = DefaultValueHandling.Ignore)]
     public float SpecularFactor = 1f;
 

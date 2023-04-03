@@ -23,7 +23,7 @@ public class HkDefinition {
 
     public string GenerateCSharpCode(Func<string, string>? nameTransformer) {
         nameTransformer ??= x => x;
-        
+
         var sb = new StringBuilder();
         sb.Append("public class ").Append(nameTransformer(Name));
         if (Parent != null)
@@ -50,7 +50,7 @@ public class HkDefinition {
         return sb.ToString();
     }
 
-    internal static HkDefinition Read(TagfileParser tagfileParser) { 
+    internal static HkDefinition Read(TagfileParser tagfileParser) {
         var name = tagfileParser.ReadString();
         var version = tagfileParser.ReadInt();
         var parent = tagfileParser.Definitions[tagfileParser.ReadInt()];

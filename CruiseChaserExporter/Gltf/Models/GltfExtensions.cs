@@ -2,8 +2,7 @@
 
 namespace CruiseChaserExporter.Gltf.Models;
 
-public class GltfExtensions
-{
+public class GltfExtensions {
     [JsonProperty("KHR_materials_specular", NullValueHandling = NullValueHandling.Ignore)]
     public GltfExtensionKhrMaterialsSpecular? KhrMaterialsSpecular;
 

@@ -1,7 +1,6 @@
 ﻿namespace CruiseChaserExporter.Gltf.Models;
 
-public enum GltfAnimationChannelTargetPath
-{
+public enum GltfAnimationChannelTargetPath {
     Translation,
     Rotation,
     Scale,

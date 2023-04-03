@@ -5,7 +5,7 @@ namespace CruiseChaserExporter.HkTagfile;
 
 public class HkNode {
     private Dictionary<string, IHkValue?>? _cachedAsMap;
-    
+
     public readonly HkDefinition Definition;
     public readonly IList<IHkValue?> Values;
 
@@ -26,7 +26,7 @@ public class HkNode {
         1 => $"{Definition.Name} (1 value)",
         _ => $"{Definition.Name} ({Values.Count} value(s))",
     };
-    
+
     internal static void ReadAndInsert(TagfileParser tagfileParser) {
         // Default to storing the node at the end of the node array.
         var nodeIndex = tagfileParser.Nodes.Count;
