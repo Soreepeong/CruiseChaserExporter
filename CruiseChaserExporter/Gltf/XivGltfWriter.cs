@@ -1,5 +1,5 @@
 ﻿using CruiseChaserExporter.Gltf.Models;
-using CruiseChaserExporter.HkDefinitions;
+using CruiseChaserExporter.HavokCodec.KnownDefinitions;
 using CruiseChaserExporter.Util;
 using Lumina;
 using Lumina.Models.Models;

@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using CruiseChaserExporter.Gltf.Models;
-using CruiseChaserExporter.HkAnimationStuff;
-using CruiseChaserExporter.HkDefinitions;
+using CruiseChaserExporter.HavokCodec.AnimationCodec;
+using CruiseChaserExporter.HavokCodec.KnownDefinitions;
 
 namespace CruiseChaserExporter.Gltf;
 
@@ -10,7 +10,7 @@ public partial class XivGltfWriter {
         IReadOnlyList<T> inValues,
         List<T> outValues,
         List<float> outTimes,
-        HkAnimationDecoder anim) {
+        AnimationSet anim) {
         if (inValues.Count == 0)
             return;
         
@@ -71,7 +71,7 @@ public partial class XivGltfWriter {
         var numAnimationsWritten = 0;
         var animCount = Math.Min(animationContainer.Animations.Length, animationContainer.Bindings.Length);
         for (var animIndex = 0; animIndex < animCount; animIndex++) {
-            var anim = HkAnimationDecoder.Decode(animationContainer.Animations[animIndex]);
+            var anim = AnimationSet.Decode(animationContainer.Animations[animIndex]);
             var trackIndexToBoneIndex = animationContainer.Bindings[animIndex].TransformTrackToBoneIndices;
 
             var trackCount = trackIndexToBoneIndex.Length;

@@ -1,14 +1,13 @@
 ﻿using CruiseChaserExporter.Gltf;
-using CruiseChaserExporter.HkDefinitions;
-using CruiseChaserExporter.HkTagfile;
+using CruiseChaserExporter.HavokCodec;
+using CruiseChaserExporter.HavokCodec.HavokTagfile;
+using CruiseChaserExporter.HavokCodec.KnownDefinitions;
 using CruiseChaserExporter.XivStruct;
 using Lumina.Models.Models;
 
 namespace CruiseChaserExporter;
 
 public static class MainApp {
-    private static string NormalizeName(string x) => char.IsUpper(x[0]) ? x : char.ToUpperInvariant(x[0]) + x[1..];
-
     public static XivGltfWriter GltfFromMonster(
         int modelId, int bodyId, int variantId,
         Lumina.GameData lumina, IEnumerable<string> paths
@@ -23,32 +22,18 @@ public static class MainApp {
             .Where(x => !string.IsNullOrWhiteSpace(x) && x.StartsWith(basePath))
             .GroupBy(Path.GetExtension, (k, v) => Tuple.Create(k, v.Order().ToArray()))
             .ToDictionary(x => x.Item1!.ToLowerInvariant(), x => x.Item2);
+        
+        var definitions = new Dictionary<Tuple<string, int>, Definition>();
+        var nodesSklb = Parser.Parse(lumina.GetFile<SklbFile>(skelPath)!.HavokData, definitions);
+        var animNodes = allPaths[".pap"].ToDictionary(
+            path => path,
+            path => Parser.Parse(lumina.GetFile<PapFile>(path)!.HavokData, definitions));
 
-        TagfileParser.Parse(out var nodesSklb, out var definitionsSklb,
-            new(new MemoryStream(lumina.GetFile<SklbFile>(skelPath)!.HavokData)));
-        var definitions = definitionsSklb.ToList();
-        var animNodes = new Dictionary<string, HkNode>();
-        foreach (var path in allPaths[".pap"]) {
-            TagfileParser.Parse(out var nodesPap, out var definitionPap,
-                new(new MemoryStream(lumina.GetFile<PapFile>(path)!.HavokData)));
-            definitions.AddRange(definitionPap);
-            animNodes[path] = nodesPap;
-        }
+        // TypedHavokDeserializer.WriteGeneratedCode(definitions.Values);
 
-        definitions = definitions.DistinctBy(x => Tuple.Create(x.Name, x.Version)).ToList();
-        // foreach (var def in definitions)
-        //     Console.WriteLine(def.GenerateCSharpCode(NormalizeName));
-
-        var typeDict = AppDomain.CurrentDomain
-            .GetAssemblies()
-            .SelectMany(x => x.GetTypes())
-            .Where(x => x.Namespace == typeof(HkRootLevelContainer).Namespace)
-            .ToDictionary(x => x.Name, x => x);
-        var defDict = definitions.ToDictionary(x => x, x => typeDict[NormalizeName(x.Name)]);
-
-        var sklb = TagfileDeserializer.Deserialize<HkRootLevelContainer>(nodesSklb, defDict, NormalizeName);
-        var anims = animNodes.ToDictionary(x => x.Key,
-            x => TagfileDeserializer.Deserialize<HkRootLevelContainer>(x.Value, defDict, NormalizeName));
+        var thd = new TypedHavokDeserializer(typeof(HkRootLevelContainer), definitions);
+        var sklb = thd.Deserialize<HkRootLevelContainer>(nodesSklb);
+        var anims = animNodes.ToDictionary(x => x.Key, x => thd.Deserialize<HkRootLevelContainer>(x.Value));
 
         var xivModel = new Model(lumina, modelPath, Model.ModelLod.High, variantId);
 
@@ -61,9 +46,14 @@ public static class MainApp {
     public static void Main() {
         var lumina = new Lumina.GameData(
             @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack");
+        
+        // Cruise Chaser (A11)
         GltfFromMonster(361, 1, 1, lumina, Resources.m0361.Split("\n")).Save("m0361_b0001_v0001");
-        // GltfFromMonster(361, 2, 1, lumina, Resources.m0361.Split("\n")).Save("m0361_b0002_v0001");
-        // GltfFromMonster(361, 3, 1, lumina, Resources.m0361.Split("\n")).Save("m0361_b0003_v0001");
-        // GltfFromMonster(489, 1, 1, lumina, Resources.m0489.Split("\n")).Save("m0489_b0001_v0001");
+        
+        // Mustadio (Orbonne)
+        GltfFromMonster(361, 3, 1, lumina, Resources.m0361.Split("\n")).Save("m0361_b0003_v0001");
+        
+        // Construct 14 (Ridorana)
+        GltfFromMonster(489, 1, 1, lumina, Resources.m0489.Split("\n")).Save("m0489_b0001_v0001");
     }
 }

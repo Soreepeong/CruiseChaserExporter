@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 using CruiseChaserExporter.Gltf.Models;
-using CruiseChaserExporter.HkDefinitions;
+using CruiseChaserExporter.HavokCodec.KnownDefinitions;
 using Lumina.Data.Files;
 using Lumina.Models.Models;
 
@@ -246,8 +246,8 @@ public partial class XivGltfWriter {
             return false;
         }
 
-        Log.D("Model[{0}]: {1} primitive{2}.", rootNodeName, childPrimitives.Count,
-            childPrimitives.Count < 2 ? "" : "s");
+        Log.D("Model[{0}]: {1} {2}.", rootNodeName, childPrimitives.Count,
+            childPrimitives.Count < 2 ? "primitive" : "primitives");
 
         node.Mesh = AddMesh(new() {
             Name = $"{rootNodeName}/mesh",

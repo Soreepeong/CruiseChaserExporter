@@ -7,9 +7,9 @@ namespace CruiseChaserExporter.XivStruct;
 
 public class PapFile : FileResource {
     public PapHeader Header;
-    public List<PapAnimation> Animations;
-    public byte[] HavokData;
-    public byte[] Parameters;
+    public List<PapAnimation> Animations = null!;
+    public byte[] HavokData = null!;
+    public byte[] Parameters = null!;
 
     public override void LoadFile() {
         Header = new(Reader);

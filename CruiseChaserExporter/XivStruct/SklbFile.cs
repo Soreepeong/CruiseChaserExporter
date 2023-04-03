@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using System.Text;
 using CruiseChaserExporter.Util;
 using Lumina.Data;
 
@@ -9,7 +8,7 @@ public class SklbFile : FileResource {
     public SklbHeader Header;
     public int Unknown0;
     public int HavokOffset;
-    public byte[] HavokData;
+    public byte[] HavokData = null!;
 
     public override void LoadFile() {
         Header = new(Reader);

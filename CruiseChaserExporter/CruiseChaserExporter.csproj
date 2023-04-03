@@ -10,6 +10,7 @@
 
     <ItemGroup>
       <PackageReference Include="BCnEncoder.Net.ImageSharp" Version="1.1.1" />
+      <PackageReference Include="JetBrains.Annotations" Version="2023.2.0-eap1" />
       <PackageReference Include="Lumina" Version="3.10.0" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
       <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />

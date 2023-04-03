@@ -133,7 +133,7 @@ public partial class XivGltfWriter {
                     };
                     break;
                 default:
-                    Console.WriteLine("Fucked shit, got unhandled TextureUsage {0}: {1}", k, v);
+                    Log.W("Unsupported TextureUsage {0}: {1}", k, v);
                     break;
             }
         }
