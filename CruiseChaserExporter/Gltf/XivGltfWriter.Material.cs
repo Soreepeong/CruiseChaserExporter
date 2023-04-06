@@ -7,7 +7,7 @@ using Lumina.Models.Materials;
 namespace CruiseChaserExporter.Gltf;
 
 public partial class XivGltfWriter {
-    private unsafe int WriteMaterial(Material xivMaterial) {
+    private int WriteMaterial(Material xivMaterial) {
         var material = new GltfMaterial {
             Name = Path.GetFileNameWithoutExtension(xivMaterial.File?.FilePath.Path),
             DoubleSided = true,
@@ -16,14 +16,17 @@ public partial class XivGltfWriter {
 
         var xivTextureMap = new Dictionary<TextureUsage, Tuple<int, int, ColorRgba32[]>>();
         foreach (var xivTexture in xivMaterial.Textures) {
+            if (xivTexture.TexturePath == "dummy.tex")
+                continue;
+
             var texbuf = _gameData.GetFile<TexFile>(xivTexture.TexturePath)!.TextureBuffer;
             var data = texbuf.Filter(format: TexFile.TextureFormat.B8G8R8A8).RawData;
             var data32 = new ColorRgba32[data.Length / 4];
-            for (int i = 0, j = 0; i < data.Length; i += 4, j++) {
-                data32[j].r = data[i + 2];
-                data32[j].g = data[i + 1];
-                data32[j].b = data[i + 0];
-                data32[j].a = data[i + 3];
+            for (int i = 0, j = 0; j < data32.Length; j++) {
+                data32[j].b = data[i++];
+                data32[j].g = data[i++];
+                data32[j].r = data[i++];
+                data32[j].a = data[i++];
             }
 
             xivTextureMap[xivTexture.TextureUsageRaw] = Tuple.Create(texbuf.Width, texbuf.Height, data32);
@@ -43,45 +46,16 @@ public partial class XivGltfWriter {
 
                         //var b = (Math.Clamp(normalPixel.B, (byte)0, (byte)128) * 255) / 128;
                         var colorSetIndex1 = (normalPixel.a / 17) * 16;
-                        var colorSetBlend = (normalPixel.a % 17) / 17.0;
+                        var colorSetBlend = (normalPixel.a % 17) / 17f;
                         //var colorSetIndex2 = (((normalPixel.A / 17) + 1) % 16) * 16;
                         var colorSetIndexT2 = (normalPixel.a / 17);
                         var colorSetIndex2 = (colorSetIndexT2 >= 15 ? 15 : colorSetIndexT2 + 1) * 16;
 
                         normal.Item3[i] = new(normalPixel.r, normalPixel.g, 255, 255);
 
-                        diffuse[i] = ColourBlend(
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex1 + 0]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex1 + 1]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex1 + 2]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex2 + 0]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex2 + 1]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex2 + 2]),
-                            normalPixel.b,
-                            colorSetBlend
-                        );
-
-                        specular[i] = ColourBlend(
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex1 + 4]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex1 + 5]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex1 + 6]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex2 + 4]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex2 + 5]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex2 + 6]),
-                            255,
-                            colorSetBlend
-                        );
-
-                        emission[i] = ColourBlend(
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex1 + 8]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex1 + 9]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex1 + 10]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex2 + 8]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex2 + 9]),
-                            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex2 + 10]),
-                            255,
-                            colorSetBlend
-                        );
+                        diffuse[i] = Blend(colorSetInfo, colorSetIndex1, colorSetIndex2, normalPixel.b, colorSetBlend);
+                        specular[i] = Blend(colorSetInfo, colorSetIndex1, colorSetIndex2, 255, colorSetBlend);
+                        emission[i] = Blend(colorSetInfo, colorSetIndex1, colorSetIndex2, 255, colorSetBlend);
                     }
 
                     xivTextureMap.TryAdd(TextureUsage.SamplerDiffuse,
@@ -90,6 +64,24 @@ public partial class XivGltfWriter {
                         Tuple.Create(normal.Item1, normal.Item2, specular));
                     xivTextureMap.TryAdd(TextureUsage.SamplerReflection,
                         Tuple.Create(normal.Item1, normal.Item2, emission));
+                }
+
+                if (xivTextureMap.TryGetValue(TextureUsage.SamplerMask, out var mask) &&
+                    xivTextureMap.TryGetValue(TextureUsage.SamplerSpecular, out var specularMap)) {
+                    var occlusion = new ColorRgba32[mask.Item3.Length];
+
+                    for (var i = 0; i < mask.Item3.Length; i++) {
+                        var maskPixel = mask.Item3[i];
+                        var specularPixel = specularMap.Item3[i];
+
+                        specularMap.Item3[i].r = (byte) (specularPixel.r * Math.Pow(maskPixel.g / 255f, 2));
+                        specularMap.Item3[i].g = (byte) (specularPixel.g * Math.Pow(maskPixel.g / 255f, 2));
+                        specularMap.Item3[i].b = (byte) (specularPixel.b * Math.Pow(maskPixel.g / 255f, 2));
+                        occlusion[i] = new(maskPixel.r, maskPixel.r, maskPixel.r, 255);
+                    }
+
+                    xivTextureMap.Add(TextureUsage.SamplerWaveMap,
+                        Tuple.Create(mask.Item1, mask.Item2, occlusion));
                 }
 
                 break;
@@ -141,15 +133,26 @@ public partial class XivGltfWriter {
         return AddMaterial(material);
     }
 
-    private static ColorRgba32 ColourBlend(byte xr, byte xg, byte xb, byte yr, byte yg, byte yb, byte a,
-        double xBlendScalar) =>
-        new(
-            (byte) Math.Max(0, Math.Min(255, (int) Math.Round(yr * xBlendScalar + xr * (1 - xBlendScalar)))),
-            (byte) Math.Max(0, Math.Min(255, (int) Math.Round(yg * xBlendScalar + xg * (1 - xBlendScalar)))),
-            (byte) Math.Max(0, Math.Min(255, (int) Math.Round(yb * xBlendScalar + xb * (1 - xBlendScalar)))),
-            a
-        );
+    private static byte Blend(byte x, byte y, double scaler) =>
+        (byte) Math.Clamp((x * (1 - scaler) + y * scaler) / byte.MaxValue, 0, byte.MaxValue);
+
+    private static ColorRgba32 Blend(ColorRgba32 x, ColorRgba32 y, byte a, double scaler) =>
+        new(Blend(x.r, y.r, scaler), Blend(x.g, y.g, scaler), Blend(x.b, y.b, scaler), a);
+
+    private static unsafe ColorRgba32 ColorFromSet(ColorSetInfo colorSetInfo, int colorSetIndex) =>
+        new(UInt16To8BitColour(colorSetInfo.Data[colorSetIndex + 0]),
+            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex + 1]),
+            UInt16To8BitColour(colorSetInfo.Data[colorSetIndex + 2]),
+            255);
+
+    private static ColorRgba32 Blend(ColorSetInfo colorSetInfo, int colorSetIndex1, int colorSetIndex2,
+        byte alpha, double scaler) => Blend(
+        ColorFromSet(colorSetInfo, colorSetIndex1),
+        ColorFromSet(colorSetInfo, colorSetIndex2),
+        alpha,
+        scaler
+    );
 
     private static byte UInt16To8BitColour(ushort s) =>
-        (byte) Math.Max(0, Math.Min(255, (int) Math.Floor((float) BitConverter.UInt16BitsToHalf(s) * 256)));
+        (byte) Math.Clamp(MathF.Floor((float) BitConverter.UInt16BitsToHalf(s) * 256), 0, byte.MaxValue);
 }

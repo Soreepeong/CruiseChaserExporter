@@ -14,6 +14,8 @@ What else would anyone ever want?
     * GLTF structure definitions and TaggedLogger.
 * [OpenAWE](https://github.com/OpenAWE-Project/OpenAWE) (GPL)
     * Spline animation decompression.
+* [Xande](https://github.com/xivapi/Xande)
+    * This project but with a real purpose.
 
 ## Useful stuff
 

@@ -11,6 +11,13 @@ public class TypedHavokDeserializer {
             .SelectMany(x => x.GetTypes())
             .Where(x => x.Namespace == rootNamespace)
             .ToDictionary(x => x.Name, x => x);
+        foreach (var def in definitions
+                     .GroupBy(x => x.Key.Item1, (_, v) => v.MaxBy(y => y.Key.Item2))
+                     .Select(x => x.Value)) {
+            if (typeDict.ContainsKey(NormalizeName(def.Name)))
+                continue;
+            WriteGeneratedCode(new[]{def});
+        }
         _defDict = definitions
             .GroupBy(x => x.Key.Item1, (_, v) => v.MaxBy(y => y.Key.Item2))
             .ToDictionary(x => x.Value, x => typeDict[NormalizeName(x.Value.Name)]);

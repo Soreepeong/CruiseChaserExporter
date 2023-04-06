@@ -15,7 +15,7 @@ public class Nurbs {
         _degree = degree;
     }
 
-    public float[] this[int t] {
+    public float[] this[float t] {
         get {
             var span = _FindSpan(t);
             var basis = _BsplineBasis(span, t);
@@ -52,7 +52,7 @@ public class Nurbs {
         return res;
     }
 
-    private int _FindSpan(int t) {
+    private int _FindSpan(float t) {
         if (t >= _knots[_controlPoints.Count])
             return _controlPoints.Count - 1;
 
