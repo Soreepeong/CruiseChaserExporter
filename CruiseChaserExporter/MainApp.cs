@@ -1,5 +1,6 @@
 ﻿using CruiseChaserExporter.ComposedModel;
 using CruiseChaserExporter.Gltf;
+using CruiseChaserExporter.XivStruct;
 using Lumina;
 
 namespace CruiseChaserExporter;
@@ -18,7 +19,7 @@ public static class MainApp {
         var lumina = new GameData(
             @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\game\sqpack");
 
-        switch (1) {
+        switch (6) {
             case 0: // Random chair
                 new ModelExporter(lumina)
                     .AddModel("bg/ffxiv/sea_s1/twn/s1ta/bgparts/s1ta_ga_char1.mdl")
@@ -42,7 +43,7 @@ public static class MainApp {
                     .Save("m0450_b0002_v0001");
                 break;
             case 5: // Default human
-                new ModelExporter(lumina, 101)
+                new ModelExporter(lumina, XivHumanSkeletonId.HyurMidlanderMale)
                     .AddModel("chara/human/c0101/obj/face/f0002/model/c0101f0002_fac.mdl")
                     .AddModel("chara/human/c0101/obj/body/b0001/model/c0101b0001_top.mdl")
                     .AddModel("chara/human/c0101/obj/body/b0001/model/c0101b0001_glv.mdl")
@@ -57,7 +58,7 @@ public static class MainApp {
                     .Save("DefaultHuman");
                 break;
             case 6: // Default Roe
-                new ModelExporter(lumina, 901)
+                new ModelExporter(lumina, XivHumanSkeletonId.RoegadynMale)
                     .AddModel("chara/human/c0901/obj/face/f0002/model/c0901f0002_fac.mdl")
                     .AddModel("chara/human/c0901/obj/hair/h0007/model/c0901h0007_hir.mdl")
                     .AddModel("chara/human/c0101/obj/body/b0001/model/c0101b0001_top.mdl")

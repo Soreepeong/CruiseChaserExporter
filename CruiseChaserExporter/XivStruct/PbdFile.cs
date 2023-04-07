@@ -15,12 +15,17 @@ public class PbdFile : FileResource {
 
         HeadersBySkeleton = Reader.ReadStructuresAsArray<HeaderBySkeletonId>(entryCount);
         HeadersByDeformer = Reader.ReadStructuresAsArray<HeaderByDeformerId>(entryCount);
-        Deformers = HeadersBySkeleton.Where(x => x.Offset != 0)
-            .Select(x => new Deformer(Reader.SeekThen(x.Offset, SeekOrigin.Begin)))
-            .ToArray();
+        Deformers = new Deformer[entryCount];
+        for (var i = 0; i < entryCount; i++) {
+            var hbdi = HeadersByDeformer[i];
+            var hbsi = HeadersBySkeleton[hbdi.SkeletonIndex];
+            Deformers[i] = new(Reader, hbdi, hbsi, hbdi.ParentDeformerIndex == 0xFFFF ? null : Deformers[hbdi.ParentDeformerIndex]);
+        }
     }
 
-    public bool TryGetDeformerBySkeletonId(int skeletonId, out Deformer deformer) {
+    public Deformer RootDeformer => Deformers.Single(x => x.Parent is null);
+
+    public bool TryGetDeformerBySkeletonId(XivHumanSkeletonId skeletonId, out Deformer deformer) {
         foreach (var (s, d) in HeadersBySkeleton.Zip(Deformers)) {
             if (s.SkeletonId == skeletonId) {
                 deformer = d;
@@ -42,7 +47,7 @@ public class PbdFile : FileResource {
     }
 
     public struct HeaderBySkeletonId {
-        public ushort SkeletonId;
+        public XivHumanSkeletonId SkeletonId;
         public ushort DeformerId;
         public int Offset;
         public float BaseScale;
@@ -50,7 +55,16 @@ public class PbdFile : FileResource {
         public override string ToString() => $"{SkeletonId}, {DeformerId}, {BaseScale:0.000}";
     }
 
-    public struct Deformer {
+    public class Deformer {
+        public XivHumanSkeletonId SkeletonId;
+        public int DeformerId;
+        public float BaseScale;
+        public Deformer? Parent;
+        public ushort HbdUnk2;
+        public ushort HbdUnk3;
+
+        public List<Deformer> Children = new();
+        
         public int BoneCount = 0;
         public string[] BoneNames = Array.Empty<string>();
         public Matrix4x4[] Matrices = Array.Empty<Matrix4x4>();
@@ -60,8 +74,20 @@ public class PbdFile : FileResource {
 
         public Deformer() { }
 
-        public Deformer(BinaryReader reader) {
-            var baseOffset = reader.BaseStream.Position;
+        public Deformer(BinaryReader reader, HeaderByDeformerId hbdi, HeaderBySkeletonId hbsi, Deformer? parentDeformer) {
+            SkeletonId = hbsi.SkeletonId;
+            DeformerId = hbsi.DeformerId;
+            BaseScale = hbsi.BaseScale;
+            Parent = parentDeformer;
+            HbdUnk2 = hbdi.Unknown2;
+            HbdUnk3 = hbdi.Unknown3;
+            
+            Parent?.Children.Add(this);
+
+            if (hbsi.Offset == 0)
+                return;
+
+            reader.BaseStream.Position = hbsi.Offset;
             reader.ReadInto(out BoneCount);
 
             var nameOffsets = reader.ReadStructuresAsArray<ushort>(BoneCount);
@@ -93,8 +119,10 @@ public class PbdFile : FileResource {
             }
 
             BoneNames = nameOffsets
-                .Select(x => reader.SeekThen(baseOffset + x, SeekOrigin.Begin).ReadCString())
+                .Select(x => reader.SeekThen(hbsi.Offset + x, SeekOrigin.Begin).ReadCString())
                 .ToArray();
         }
+
+        public override string ToString() => $"{SkeletonId} @ {DeformerId} (x{BaseScale:0.00}); {HbdUnk2}, {HbdUnk3}";
     }
 }

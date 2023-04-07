@@ -7,9 +7,9 @@ public class SourceModel {
     private List<Bone>? _bones;
     private Bone? _rootBone;
     public readonly Model Model;
-    public readonly Tuple<PapFile.PapTargetModelType, int> AnimationKey;
+    public readonly AnimDictKey AnimationKey;
 
-    public SourceModel(Model model, List<Bone>? bones, Tuple<PapFile.PapTargetModelType, int> animationKey) {
+    public SourceModel(Model model, List<Bone>? bones, AnimDictKey animationKey) {
         Model = model;
         _bones = bones;
         AnimationKey = animationKey;

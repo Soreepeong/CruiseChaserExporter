@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using System.Numerics;
+﻿using System.Numerics;
 using CruiseChaserExporter.Animation;
 using CruiseChaserExporter.Gltf;
 using CruiseChaserExporter.HavokCodec;
@@ -18,22 +17,18 @@ public class ModelExporter {
 
     private readonly List<SourceModel> _sourceItems = new();
 
-    private readonly Dictionary<
-        Tuple<PapFile.PapTargetModelType, int>,
-        Tuple<List<Bone>, Dictionary<string, IAnimation>>
-    > _animations =
-        new();
+    private readonly Dictionary<AnimDictKey, AnimDictValue> _animations = new();
 
-    private readonly int? _baseRaceId;
-    private readonly List<Bone>? _baseBone;
+    private readonly XivHumanSkeletonId _baseHumanSkeleton;
+    private readonly List<Bone>? _baseHumanBone;
 
-    public ModelExporter(GameData gameData, int? baseRaceId = null) {
+    public ModelExporter(GameData gameData, XivHumanSkeletonId baseHumanSkeleton = XivHumanSkeletonId.NotHuman) {
         _gameData = gameData;
-        if (baseRaceId is not null) {
-            _baseBone = _GetBones(string.Format(
-                "chara/human/c{0:D4}/skeleton/base/b0001/skl_c{0:D4}b0001.sklb", baseRaceId));
-            if (_baseBone is not null)
-                _baseRaceId = baseRaceId;
+        if (baseHumanSkeleton != XivHumanSkeletonId.NotHuman) {
+            _baseHumanBone = _GetBones(string.Format(
+                "chara/human/c{0:D4}/skeleton/base/b0001/skl_c{0:D4}b0001.sklb", (int)baseHumanSkeleton));
+            if (_baseHumanBone is not null)
+                _baseHumanSkeleton = baseHumanSkeleton;
         }
     }
 
@@ -45,9 +40,9 @@ public class ModelExporter {
         if (root.NamedVariants.FirstOrDefault()?.Variant is not HkaAnimationContainer animationContainer)
             throw new InvalidDataException("Given file does not have a hkaAnimationContainer.");
 
-        var modelKey = Tuple.Create(papFile.Header.ModelType, (int) papFile.Header.ModelId);
+        var modelKey = new AnimDictKey(papFile);
         if (!_animations.TryGetValue(modelKey, out var animations))
-            _animations[modelKey] = animations = new(new(), new());
+            _animations[modelKey] = animations = new();
         for (var i = 0; i < animationContainer.Bindings.Length; i++)
             animations.Item2[$"{papPath}:{i}"] = AnimationSet.Decode(animationContainer.Bindings[i]);
         return this;
@@ -74,23 +69,23 @@ public class ModelExporter {
 
     public XivGltfWriter Export() {
         var bones = new List<Bone>();
-        var rootBones = new Dictionary<Bone, HashSet<Tuple<PapFile.PapTargetModelType, int>>>();
-        if (_baseBone != null && _baseRaceId != null) {
-            bones.AddRange(_baseBone);
-            rootBones[_baseBone.Single(x => x.Parent is null)] =
-                new() {Tuple.Create(PapFile.PapTargetModelType.Human, _baseRaceId.Value)};
+        var rootBones = new Dictionary<Bone, HashSet<AnimDictKey>>();
+        if (_baseHumanBone != null) {
+            bones.AddRange(_baseHumanBone);
+            rootBones[_baseHumanBone.Single(x => x.Parent is null)] =
+                new() { new(PapFile.PapTargetModelType.Human, _baseHumanSkeleton) };
         }
 
         foreach (var model in _sourceItems) {
             if (model.Bones is null && model.Model.Meshes.Any(x => x.BoneTable.Any()))
-                model.Bones = _baseBone;
+                model.Bones = _baseHumanBone;
 
             if (model.RootBone is null || model.Bones is null)
                 continue;
 
             var bone = bones.SingleOrDefault(x => x.Name == model.RootBone.Name);
             if (bone is null) {
-                HashSet<Tuple<PapFile.PapTargetModelType, int>>? animKeys = null;
+                HashSet<AnimDictKey>? animKeys = null;
                 foreach (var (newParent, unroot) in model.Bones
                              .Select(x => (x, rootBones.Keys.SingleOrDefault(y => x.Name == y.Name)))) {
                     if (unroot is null)
@@ -113,7 +108,7 @@ public class ModelExporter {
             }
         }
 
-        var boneByName = bones.ToDictionary(x => x.Name, x => x); 
+        var boneByName = bones.ToDictionary(x => x.Name, x => x);
 
         var writer = new XivGltfWriter("GLTF", false, true, _gameData);
         var rootBoneCounter = 0;
@@ -121,9 +116,10 @@ public class ModelExporter {
             writer.AddSkin($"Root#{rootBoneCounter++}", rootBone);
 
             var pbdFile = _gameData.GetFile<PbdFile>("chara/xls/boneDeformer/human.pbd")!;
-            if (pbdFile.TryGetDeformerBySkeletonId(_baseRaceId ?? 0xFFFF, out var deformer)) {
+            if (pbdFile.TryGetDeformerBySkeletonId(_baseHumanSkeleton, out var deformer)) {
                 var translations = deformer.Translations.Select((x, i) => (x, i)).ToDictionary(x => x.i, x => x.x);
-                var rotations = deformer.Rotations.Select((x, i) => (x, i)).ToDictionary(x => x.i, x => Quaternion.Normalize(x.x));
+                var rotations = deformer.Rotations.Select((x, i) => (x, i))
+                    .ToDictionary(x => x.i, x => Quaternion.Normalize(x.x));
                 var scales = deformer.Scales.Select((x, i) => (x, i)).ToDictionary(x => x.i, x => x.x);
 
                 writer.AddAnimation("deformation", new StaticAnimation(translations, rotations, scales),
@@ -158,7 +154,8 @@ public class ModelExporter {
         var rootUntyped = Parser.Parse(sklbFile.HavokData, _havokDefinitions);
         var root = new TypedHavokDeserializer(typeof(HkRootLevelContainer), _havokDefinitions)
             .Deserialize<HkRootLevelContainer>(rootUntyped);
-        if (root.NamedVariants.SingleOrDefault(x => x.Variant is HkaAnimationContainer)?.Variant is not HkaAnimationContainer animationContainer)
+        if (root.NamedVariants.SingleOrDefault(x => x.Variant is HkaAnimationContainer)?.Variant is not
+            HkaAnimationContainer animationContainer)
             return null;
 
         if (animationContainer.Skeletons.FirstOrDefault() is not { } hkaSkeleton)
@@ -180,7 +177,7 @@ public class ModelExporter {
         var animKey = GetAnimationSkeletonKey(sklbPath.Split("/"));
         if (animKey.Item1 == PapFile.PapTargetModelType.Invalid)
             return bones.ToList();
-        
+
         if (!_animations.TryGetValue(animKey, out var animTuple))
             _animations[animKey] = animTuple = new(new(), new());
         animTuple.Item1.Clear();
@@ -238,19 +235,16 @@ public class ModelExporter {
         );
     }
 
-    private static Tuple<PapFile.PapTargetModelType, int>
-        GetAnimationSkeletonKey(IReadOnlyList<string>? pathComponents) {
+    private static AnimDictKey GetAnimationSkeletonKey(IReadOnlyList<string>? pathComponents) {
         if (pathComponents is null)
-            return Tuple.Create(PapFile.PapTargetModelType.Invalid, -1);
+            return AnimDictKey.Invalid;
         var targetModelType = pathComponents[1] switch {
-                "human" when pathComponents[4] == "base" => PapFile.PapTargetModelType.Human,
-                "monster" => PapFile.PapTargetModelType.Monster,
-                "demihuman" => PapFile.PapTargetModelType.DemiHuman,
-                "weapon" => PapFile.PapTargetModelType.Weapon,
-                _ => PapFile.PapTargetModelType.Invalid,
-            };
-        return Tuple.Create(targetModelType, targetModelType == PapFile.PapTargetModelType.Invalid
-            ? -1
-            : Convert.ToInt32(pathComponents[2][1..], 10));
+            "human" when pathComponents[4] == "base" => PapFile.PapTargetModelType.Human,
+            "monster" => PapFile.PapTargetModelType.Monster,
+            "demihuman" => PapFile.PapTargetModelType.DemiHuman,
+            "weapon" => PapFile.PapTargetModelType.Weapon,
+            _ => PapFile.PapTargetModelType.Invalid,
+        };
+        return new(targetModelType, Convert.ToUInt16(pathComponents[2][1..], 10));
     }
 }
